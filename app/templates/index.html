@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-body text-center p-5">
+        <h1 class="display-4 text-primary">Analise seus Trades</h1>
+        <p class="lead text-muted">Transforme seus relatórios do MT5 em inteligência de mercado.</p>
+        <hr class="my-4">
+        <p>Faça o upload do seu relatório e descubra onde você está errando.</p>
+        <form method="POST" action="" enctype="multipart/form-data" class="mt-4">
+            <div class="mb-3">
+                <label for="relatorio" class="form-label text-start d-block">Selecione o relatório (.html ou .xlsx)</label>
+                <input type="file" class="form-control" id="relatorio" name="file" required>
+            </div>
+            <button class="btn btn-primary btn-lg w-100">
+                🚀 Analisar Relatório
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

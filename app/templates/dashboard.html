@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="text-center mb-5">
+    <h2>📊 Resultado da Análise</h2>
+    <a href="{{ url_for('index') }}" class="btn btn-outilne-secondary btn-sm">⬅ Voltar</a>
+</div>
+<div class="row text-center">
+    <div class="col-md-4 mb-3">
+        <div class="card shadow border-0">
+            <div class="card-body">
+                <h5 class="text-muted">Resultado Líquido</h5>
+                <h2 class="{{ 'text-success' if dados.resultado_financeiro >= 0 else 'text-danger' }}">
+                    R$ {{ dados.resultado_financeiro }}
+                </h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card shadow border-0">
+            <div class="card-body">
+                <h5 class="text-muted">Taxa de Acerto</h5>
+                <h2 class="text-primary">{{ dados.taxa_acerto }}%</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card shadow border-0">
+            <div class="card-body">
+                <h5 class="text-muted">Total de Trades</h5>
+                <h2>{{ dados.total_trades }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mt-4">
+    {% if current_user.is_premium %}
+        <div class="col-md-6">
+            <div class="alert alert-success">Maior Ganho: R$ {{ dados.maior_ganho }} 🤑</div>
+        </div>
+        <div class="col-md-6">
+            <div class="alert alert-danger">Maior Perda: R$ {{ dados.maior_perda }}🔻</div>
+        </div>
+    {% else %}
+        <div class="col-12">
+            <div class="card border-warnig text-center p-4" style="background-color: #fff3cd;">
+                <h3>🔒 Conteúdo Exclusivo Premium</h3>
+                <p>Usuários Free não veem os dados de Risco (Maior Ganho/Perda).</p>
+                <a href="{{ url_for('pricing') }}" class="btn btn-warning btn-lg">
+                    👑 Virar Premium por R$ 9,90
+                </a>
+
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
