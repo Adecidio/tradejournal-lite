@@ -6,15 +6,21 @@ import os
 # Cria a instância da aplicação (o objeto que representa o site)
 app = Flask(__name__)
 
-# --- CONFIGURAÇÕES DE SEGURANÇA E BANCO ---
-# Chave secreta para proteger os cookies de sessão (em produção, isso fica oculto)
-app.config['SECRET_KEY'] = 'uma-senha-muito-secreta-do-projeto-trade'
+# --- CONFIGURAÇÃO INTELIGENTE DE BANCO DE DADOS ---
+# Tenta pegar a URL do banco das variáveis de ambiente do sistema (no Render)
+database_url = os.environ.get('DATABASE_URL')
 
-# Onde o arquivo do banco vai ficar (app.db na pasta app)
-basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'app.db')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+if database_url:
+    # Correção para o Render: O Render fornece "postgres://", mas o SQLAlchemy exige "postgresql://"
+    if database_url.startswith("postres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
 
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+else:
+    # Se não encontrar a variável (estamos no pc local), usa o SQLite
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    app.config['SQLALCHEMY_TRACK_MODIFICATITIONS'] = False
+    
 # Inicializa as extensões
 db = SQLAlchemy(app)
 login = LoginManager(app)
