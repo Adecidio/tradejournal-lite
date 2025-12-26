@@ -19,7 +19,9 @@ if database_url:
 else:
     # Se não encontrar a variável (estamos no pc local), usa o SQLite
     basedir = os.path.abspath(os.path.dirname(__file__))
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'app.db')
+    
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Inicializa as extensões
 db = SQLAlchemy(app)
