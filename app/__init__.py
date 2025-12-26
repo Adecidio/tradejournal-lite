@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 # --- SEGURANÇA ---
 # Tenta pegar do Render (os.environ). Se não achar, usa a string fixa (para rodar no PC).
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'super-senha-secreta-do-trade-journal-2025-xpto'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'minha-senha-secreta-local-123'
 
 # --- CONFIGURAÇÃO INTELIGENTE DE BANCO DE DADOS ---
 # Tenta pegar a URL do banco das variáveis de ambiente do sistema (no Render)
