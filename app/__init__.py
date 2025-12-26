@@ -6,6 +6,10 @@ import os
 # Cria a instância da aplicação (o objeto que representa o site)
 app = Flask(__name__)
 
+# --- SEGURANÇA ---
+# Tenta pegar do Render (os.environ). Se não achar, usa a string fixa (para rodar no PC).
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'super-senha-secreta-do-trade-journal-2025-xpto'
+
 # --- CONFIGURAÇÃO INTELIGENTE DE BANCO DE DADOS ---
 # Tenta pegar a URL do banco das variáveis de ambiente do sistema (no Render)
 database_url = os.environ.get('DATABASE_URL')
