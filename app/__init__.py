@@ -4,6 +4,15 @@ from flask_login import LoginManager
 import os
 from dotenv import load_dotenv
 
+# --- DEBUG TEMPORÁRIO ---
+print("--- INICIANDO APP ---")
+key_render = os.environ.get('SECRET_KEY')
+if key_render:
+    print(f"Chave encontrada: {key_render[:5]}...")
+else:
+    print("ERRO CRÍTICO: Nenhuma SECRET_KEY encontrada no ambiente!")
+# ---------------------------
+
 # Carrega as variáveis do arquivo .env
 load_dotenv()
 
