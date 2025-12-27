@@ -12,8 +12,17 @@ UPLOAD_FOLDER = os.path.join(os.getcwd(), 'app', 'uploads')
 
 # Garante que a paste existe (se não, cria)
 if not os.path.exists(UPLOAD_FOLDER):
-    OS.makedirs(UPLOAD_FOLDER)
+    os.makedirs(UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# --- ROTA TEMPORÁRIA DE SETUP ---
+@app.route('/criar-tabelas-agora')
+def criar_tabelas():
+    try:
+        db.create_all()
+        return "<h1>Sucesso! Tabelas criadas no PostgreSQL.</h1>"
+    except Exception as e:
+        return f"<h1>Erro:</h1> <p>{str(e)}</p>"
 
 # --- Função Auxiliar para o Flask-Login saber quem é quem ---
 @login.user_loader
@@ -96,7 +105,7 @@ def register():
 
         # Verifica se já existe
         if User.query.filter_by(username=username).first():
-            flahs('Esse nome de usuário já existe.', 'warning')
+            flash('Esse nome de usuário já existe.', 'warning')
             return redirect(url_for('register'))
 
         # Cria o novo usuário
