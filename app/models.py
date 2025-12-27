@@ -4,6 +4,7 @@ from datetime import datetime
 
 # UserMixin dá superpoderes à classe (já traz métodos com is_authenticated)
 class User(UserMixin, db.Model):
+    __tablename__ = 'users'
     # As colunas da tabela no banco de dados
     id = db.Column(db.Integer, primary_key=True) # Identidade única (CPF do banco)
     username = db.Column(db.String(64), index=True, unique=True) # Nome de usuário
