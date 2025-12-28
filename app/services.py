@@ -115,6 +115,9 @@ def processar_relatorio(filepath):
         # Adiciona um 0 no começo para o gráfico partir da origem
         lista_patrimonio.insert(0, 0)
 
+        # Converter o DataFrame em uma lista de dionários para o HTML 
+        lista_trades = df.to_dict('records')
+
         return {
             "sucesso": True,
             "total_trades": int(total_trades),
@@ -123,7 +126,8 @@ def processar_relatorio(filepath):
             "maior_perda": round(maior_perda, 2),
             "taxa_acerto": round(taxa_acerto, 2),
             "profit_factor": profit_factor,
-            "grafico_dados": lista_patrimonio
+            "grafico_dados": lista_patrimonio,
+            "lista_trades": lista_trades
         }
 
     except Exception as e:

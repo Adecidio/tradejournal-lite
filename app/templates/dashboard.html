@@ -116,6 +116,56 @@
     });
     
 </script>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow border-0 mb-5">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">Extrato das Operações</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Ticket</th>
+                            <th>Ativo</th>
+                            <th>Tipo</th>
+                            <th>Volume</th>
+                            <th>Preço Ent.</th>
+                            <th>Preço Saída</th>
+                            <th class="text-end">Resultado Líquido</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for trade in dados.lista_trades %}
+                        <tr>
+                            <td><small class="text-muted">#{{  trade.ticket }}</small></td>
+                            <td><strong>{{  trade.symbol }}</strong></td>
+
+                            <td>
+                                {% if 'buy' in trade.type|lower %}
+                                    <span class="badge bg-success bg-opacaty-10 text-success">Compra</span>
+                                {% else %}
+                                        <span class="badge bg-danger bg-opacaty-10 text-danger">Venda</span>
+                                {% endif %}
+                            </td>
+
+                            <td>{{ trade.volume }}</td>
+                            <td>{{ trade.price_open }}</td>
+                            <td>{{ trade.price_close}}</td>
+
+                            <td class="text-end fw-bold {{ 'text-success' if trade.net_result >= 0 else 'text-danger' }}">
+                                R$ {{ trade.net_result }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
     {% if current_user.is_premium %}
     <div class="row mt-4 mb-4">
         <div class="col-md-6">
