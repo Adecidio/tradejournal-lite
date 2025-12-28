@@ -124,16 +124,18 @@
             <div class="alert alert-danger">Maior Perda: R$ {{ dados.maior_perda }}🔻</div>
         </div>
     {% else %}
-        <div class="col-12">
-            <div class="card border-warnig text-center p-4" style="background-color: #fff3cd;">
-                <h3>🔒 Conteúdo Exclusivo Premium</h3>
-                <p>Usuários Free não veem os dados de Risco (Maior Ganho/Perda).</p>
-                <a href="{{ url_for('pricing') }}" class="btn btn-warning btn-lg">
-                    👑 Virar Premium por R$ 9,90
-                </a>
+<div class="row mt-4 mb-4">
+    <div class="col-12">
+        <div class="card border-warnig text-center p-4" style="background-color: #fff3cd;">
+            <h3>🔒 Conteúdo Exclusivo Premium</h3>
+            <p>Usuários Free não veem os dados de Risco (Maior Ganho/Perda).</p>
+            <a href="{{ url_for('pricing') }}" class="btn btn-warning btn-lg">
+                👑 Virar Premium por R$ 9,90
+            </a>
 
-            </div>
         </div>
+    </div>
+</div>
     {% endif %}
 </div>
 {% endblock %}
