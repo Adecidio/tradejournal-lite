@@ -117,12 +117,14 @@
     
 </script>
     {% if current_user.is_premium %}
+    <div class="row mt-4 mb-4">
         <div class="col-md-6">
             <div class="alert alert-success">Maior Ganho: R$ {{ dados.maior_ganho }} 🤑</div>
         </div>
         <div class="col-md-6">
             <div class="alert alert-danger">Maior Perda: R$ {{ dados.maior_perda }}🔻</div>
         </div>
+    </div>
     {% else %}
 <div class="row mt-4 mb-4">
     <div class="col-12">
