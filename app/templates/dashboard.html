@@ -46,45 +46,76 @@
         </div>
     </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/chart.js">
-    // Pega o contexto do Canvas
-    const ctx = document.getElementById('equityChart').getContext('2d');
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    // Recebe os dados do Python (O Jinja2 injeta a lista aqui)
-    const dadosGrafico = {{ dados.grafico_dados | tojson }};
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Tenta pegar o contexto. Se falhar, para tudo.
+        const canvas = document.getElementById('equityChart');
+        if (!canvas) return;
 
-    // Cria labels genéricos (Trade 1, Trade 2, etc.)
-    const labels = dadosGrafico.map((val, index) => index === 0 ? 'Início' : `Trade ${index}`);
+        const ctx = canvas.getContext('2d');
 
-    // Configura a cor da linha (Verde se lucro, Vermelho se prejuízo)
-    const corLinha = dadosGrafico[dadosGrafico.length -1] >= 0 ? '#198754' : '#dc3545';
+        // Recebe os dados do Python (O Jinja2 injeta a lista aqui)
+        const dadosGrafico = {{ dados.grafico_dados | default([]) | tojson | safe }};
 
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Saldo Acumulado (R$)',
-                data: dadosGrafico,
-                borderColor: corLinha,
-                backgroundColor: corLinha + '20',  // Mesma cor mas transparente
-                fill: true,
-                tension: 0.4,  // Deixa a linha
-                pointRadius: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { display: false }
-            },
-            interaction: {
-                intersect: false,
-                mode: 'index',
-            }
+        console.log("Dados recebidos para o gráfico:", dadosGrafico); // Para debug
+
+        // Se a lista estiver vazia ou inválida, não desenha nada
+        if (!dadosGrafico || dadosGrafico.length === 0) {
+            console.warn("Gráfico vazio: Nenhum dado recebido do Python.");
         }
-    });
 
+        // Cria labels genéricos (Trade 1, Trade 2, etc.)
+        const labels = dadosGrafico.map((val, index) => index === 0 ? 'Início' : `Trade ${index}`);
+
+        // Configura a cor da linha (Verde se lucro, Vermelho se prejuízo)
+        const corLinha = dadosGrafico[dadosGrafico.length -1] >= 0 ? '#198754' : '#dc3545';
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Saldo Acumulado (R$)',
+                    data: dadosGrafico,
+                    borderColor: corLinha,
+                    backgroundColor: corLinha + '20',  // Mesma cor mas transparente
+                    fill: true,
+                    tension: 0.3,  // Deixa a linha curva
+                    pointRadius: 3,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,  // Deixa o gráfico se adaptar melhor à altura
+                plugins: {
+                    legend: { display: false},
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                return 'R$ ' + context.parsed.y.toFixed(2);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { display: false }, // Esconde o eixo X
+                    y: {
+                        grid: { color: '#f0f0f0'}
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'nearest',
+                }
+            }
+        });
+    });
+    
 </script>
     {% if current_user.is_premium %}
         <div class="col-md-6">
