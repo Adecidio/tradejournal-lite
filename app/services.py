@@ -106,6 +106,14 @@ def processar_relatorio(filepath):
             soma_ganhos = df[df['net_result'] > 0]['net_result'].sum()
             soma_perdas = abs(df[df['net_result'] < 0]['net_result'].sum())
             profit_factor = round(soma_ganhos / soma_perdas, 2) if soma_perdas > 0 else 99.99
+        
+        # PREPARA DADOS PARA O GRÁFICO
+        # cumsum() faz a suma acumulada: [10, -5, 20] vira [10, 5, 25]
+        # tolist() converte do formato Pandas para lista simples do Python
+        lista_patrimonio = df['net_result'].cumsum().tolist()
+
+        # Adiciona um 0 no começo para o gráfico partir da origem
+        lista_patrimonio.insert(0, 0)
 
         return {
             "sucesso": True,
@@ -114,7 +122,8 @@ def processar_relatorio(filepath):
             "maior_ganho": round(maior_lucro, 2),
             "maior_perda": round(maior_perda, 2),
             "taxa_acerto": round(taxa_acerto, 2),
-            "profit_factor": profit_factor
+            "profit_factor": profit_factor,
+            "grafico_dados": lista_patrimonio
         }
 
     except Exception as e:

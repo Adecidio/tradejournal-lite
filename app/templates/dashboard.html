@@ -34,6 +34,58 @@
     </div>
 </div>
 <div class="row mt-4">
+<div class="row mt-4 mb-4">
+    <div class="col-12">
+        <div class="card shadow border-0">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">Curva de Patrimônio</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="equityChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js">
+    // Pega o contexto do Canvas
+    const ctx = document.getElementById('equityChart').getContext('2d');
+
+    // Recebe os dados do Python (O Jinja2 injeta a lista aqui)
+    const dadosGrafico = {{ dados.grafico_dados | tojson }};
+
+    // Cria labels genéricos (Trade 1, Trade 2, etc.)
+    const labels = dadosGrafico.map((val, index) => index === 0 ? 'Início' : `Trade ${index}`);
+
+    // Configura a cor da linha (Verde se lucro, Vermelho se prejuízo)
+    const corLinha = dadosGrafico[dadosGrafico.length -1] >= 0 ? '#198754' : '#dc3545';
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Saldo Acumulado (R$)',
+                data: dadosGrafico,
+                borderColor: corLinha,
+                backgroundColor: corLinha + '20',  // Mesma cor mas transparente
+                fill: true,
+                tension: 0.4,  // Deixa a linha
+                pointRadius: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index',
+            }
+        }
+    });
+
+</script>
     {% if current_user.is_premium %}
         <div class="col-md-6">
             <div class="alert alert-success">Maior Ganho: R$ {{ dados.maior_ganho }} 🤑</div>
