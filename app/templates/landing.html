@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container col-xxl-8 px-4 py-5">
+    <div class="row flex-lg-row-reverse align-items-center g-5 py-5">
+        <div class="col-10 col-sm-8 col-lg-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-2">
+                    <canvas id="demoChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <h1 class="display-5 fw-bold lh-1 mb-3">Transforme seus relatórios do MT5 em <span class="text-primary">Lucro Líquido</span></h1>
+            <p class="lead">Chega de planilhas complexas. Descubra seu Fator de Lucro, Drawdown e curva de patrimônio em segundos. Simples, rápido e automático.</p>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-4 me-md-2">Começar   Grátis 🚀</a>
+                <a href="{{ url_for('login') }}" class="btn btn-outline-secundary btn-lg px-4">Já tenho conta</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container px-4 py-5" id="recursos">
+    <h2 class="pb-2 border-bottom">Porque usar o TradeJournal?</h2>
+    <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+        <div class="col d-flex align-items-start">
+            <div class="icon-square bg-light text-dark flex-shrink-0 me-3">
+                📊
+            </div>
+            <div>
+                <h2>Análise Visual</h2>
+                <p>Transformamos a sopa de números do Excel em gráficos de Curva de Patrimônio claros e intuitivos.</p>
+            </div>
+        </div>
+        <div class="col d-flex align-items-start">
+            <div class="icon-square bg-light text-dark flex-shrink-0 me-3">
+                💰
+            </div>
+            <div>
+                <h2>Lucro Real</h2>
+                <p>Muitos traders esquecem das taxas. Nós calculamos Swap e Comissões automaticamente para te dar a real.</p>
+            </div>
+        </div>
+        <div class="col d-flex align-items-start">
+            <div class="icon-square bg-light text-dark flex-shrink-0 me-3">
+                🔒
+            </div>
+            <div>
+                <h2>100% Seguro</h2>
+                <p>Seus dados são seus. Armazenamento seguro na nuvem e área exclusiva para membros.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <h3 class="text-center mb-4">Visualize seus trades assim:</h3>
+    <div class="table-responsive shadow rounded">
+        <table class="table table-hover align-middle mb-0 bg-white">
+            <thead class="table-light">
+                <tr>
+                    <th>Ticket</th>
+                    <th>Ativo</th>
+                    <th>Tipo</th>
+                    <th>Resultado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>#88592</td>
+                    <td><strong>WIN$N</strong></td>
+                    <td><span class="badge bg-success bg-opacity-10 text-success">Compra</span></td>
+                    <td class="text-success fw-bold">+ R$ 150,00</td>
+                </tr>
+                <tr>
+                    <td>#88593</td>
+                    <td><strong>WDO$N</strong></td>
+                    <td><span class="badge bg-danger bg-opacity-10 text-danger">Venda</span></td>
+                    <td class="text-danger fw-bold">- R$ 45,00</td>
+                </tr>
+                <tr>
+                    <td>#88594</td>
+                    <td><strong>EURUSD</strong></td>
+                    <td><span class="badge bg-success bg-opacity-10 text-success">Compra</span></td>
+                    <td class="text-success fw-bold">+ R$ 320,00</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="text-center mt-4">
+        <p>E muito mais detalhes...</p>
+    </div>
+</div>
+<div class="bg-dark text-secondary px-4 py-5 text-center">
+    <div class="py-5">
+        <h1 class="display-5">Pronto para evoluir?</h1>
+        <div class="col-lg-6 mx-auto">
+            <p class="fs-5 mb-4">Junte-se a traders que tratam o mercado como negócio, e não como jogo.</p>
+            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+                <a href="{{ url_for('register') }}" class="btn btn-outline-info btn-lg px-4">Criar Conta Gratuita</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('demoChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Início', 'Dia 1', 'Dia 2', 'Dia 3', 'Dia 4', 'Dia 5', 'Hoje'],
+            datasets: [{
+                label: 'Exemplo de Crescimento',
+                data: [0, 150, 120, 300, 450, 400, 650],  // Dados FAKES só para mostrar subida
+                borderColor: '#0d6efd',  // Azul Bootstrap
+                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {    // Minimalista
+                x: {
+                    display: false
+                },
+                y: {
+                    display: false
+                }
+            },
+            elements: {
+                point: {
+                    radius: 0  // Sem bolinhas, só a linha
+                }
+            }
+        }
+    });
+</script>
+
+{% endblock %}

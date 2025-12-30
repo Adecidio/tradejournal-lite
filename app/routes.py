@@ -31,11 +31,19 @@ def load_user(id):
     return db.session.get(User, int(id))  # Busca o usuário pelo ID no banco
 
 # --- Rota Principal (Home) ---
-@app.route('/', methods=['GET', 'POST']) # POST para o envio de dados
-@app.route('/index', methods=['GET', 'POST'])
-@login_required # Rota de Segurança! Só entra logado.
-
+@app.route('/')
 def index():
+    # Se já é cliente, vai direto pro painel
+    if current_user.is_authenticated:
+        return render_template('dashboard.html', dados={})
+    
+    # Se é visitante, mostra a LandingPage
+    return render_template('landing.html')
+
+# --- Rota Dashboard ---
+@app.route('/dashboard', methods=['GET', 'POST'])
+@login_required
+def dashboard():
     # Se o usuário apertou o botão "Analisar" (fez um POST)
     if request.method == 'POST':
         # Verifica se o arquivo veio no formulário
@@ -62,6 +70,7 @@ def index():
             return render_template('dashboard.html', dados=resultado)
 
     return render_template('index.html')
+    
 
 # --- Rota de Login ---
 @app.route('/login', methods=['GET', 'POST'])
