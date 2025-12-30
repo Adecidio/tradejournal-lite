@@ -33,9 +33,20 @@ def load_user(id):
 # --- Rota Principal (Home) ---
 @app.route('/')
 def index():
-    # Se já é cliente, vai direto pro painel
+    # Se logado, tenta renderizar o dashboard, mas com dados seguros zerados
     if current_user.is_authenticated:
-        return render_template('dashboard.html', dados={})
+        # Cria um objeto 'fake' com zeros para não quebrar o HTML
+        dados_vazios = {
+            "total_tardes": 0,
+            "resultado_financeiro": 0.0,
+            "maior_ganho": 0.0,
+            "maior_perda": 0.0,
+            "taxa_acerto": 0.0,
+            "profit_factor": 0.0,
+            "grafico_dados": [],
+            "lista_trades": []
+        }
+        return render_template('dashboard.html', dados=dados_vazios)
     
     # Se é visitante, mostra a LandingPage
     return render_template('landing.html')
