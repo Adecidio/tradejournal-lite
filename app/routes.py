@@ -68,36 +68,6 @@ def index():
     return render_template('dashboard.html', dados=dados_dashboard)
 
 
-# --- Rota Dashboard ---
-@app.route('/dashboard', methods=['GET', 'POST'])
-@login_required
-def dashboard():
-    # Se o usuário apertou o botão "Analisar" (fez um POST)
-    if request.method == 'POST':
-        # Verifica se o arquivo veio no formulário
-        if 'file' not in request.files:
-            return "Nenhum arquivo enviado!"
-        
-        file = request.files['file']
-
-        # Se o usuário enviou um arquivo vazio
-        if file.filename == '':
-            return "Nenhum arquivo selecionado!"
-        
-        if file:
-            # 1. Salva o arquivo na pasta uploads
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-            file.save(filepath)
-            resultado = processar_relatorio(filepath)
-
-            # 2. Verifica se deu erro
-            if "erro" in resultado:
-                return f"<h3 style='color:red'>Erro: {resultado['erro']}</h3>"
-
-            # 3. Mostra o Dashboard enviando os dados (resultado) para o HTML
-            return render_template('dashboard.html', dados=resultado)
-
-    return render_template('index.html')
     
 
 # --- Rota de Login ---
