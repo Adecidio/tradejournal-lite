@@ -15,6 +15,7 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # RELACIONAMENTO: Um usuário tem MUITOS trades
+    trades = db.relationship('Trade', backref='author', lazy='dynamic')
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
