@@ -1,136 +1,172 @@
 import pandas as pd
 import numpy as np
+from app import db
+from app.models import Trade
 
-def processar_relatorio(filepath):
+def salvar_trades_do_excel(filepath, user):
+    """
+    Lê o Excel, encontra os trades e salva no Banco de Dados.
+    Evita duplicatas verificando o número do Ticket.
+    """
     try:
-        # 1. LEITURA BRUTA (Sem cabeçalho)
-        # Lê tudo como se fosse texto simples para a gente procurar a tabela
+        # 1. LEITURA E LIMPEZA
         df_raw = pd.read_excel(filepath, header=None)
 
-        # 2. O CAÇADOR DE CABEÇALHO
-        # Vamos varrer as primeiras 20 linhas procurando onde começa a tabela real
         header_index = None
-        
         for i, row in df_raw.head(30).iterrows():
-            # Converte a linha toda para texto minúsculo para facilitar a busca
             row_text = [str(val).lower() for val in row.values]
-            
-            # A linha certa do cabeçalho costuma ter "position" (ou "ticket") E "lucro" (ou "profit")
-            # Adicionamos verificações para português e inglês
-            tem_ticket = any(x in row_text for x in ['position', 'posi', 'ticket'])
-            tem_lucro = any(x in row_text for x in ['lucro', 'profit'])
-            
-            if tem_ticket and tem_lucro:
+            if any(x in row_text for x in ['position', 'ticket']) and any(x in row_text for x in ['lucro', 'profit']):
                 header_index = i
                 break
-        
         if header_index is None:
-            return {"erro": "Não consegui encontrar a tabela de 'Posições' no arquivo. Verifique se é um relatório padrão do MT5."}
-
-       # 3. EXTRAÇÃO CIRÚRGICA (O frieo de mão)
-       # Para assim que encontra uma linha que não seja um operação
+            return {"erro: " "Cabeçalho não encontrado."}
+        
         rows_to_keep = []
-        # Pega todas as linhas abaixo do cabeçalho
         candidate_rows = df_raw.iloc[header_index + 1:].values
 
         for row in candidate_rows:
-            # Estrutura: [Horario, Ticket, Ativo...]
-            ticket_val = row[1]
-
-            # Verificação: É um número válido?
-            val_str = str(ticket_val).strip()
-
-            if val_str.replace('.', '').isdigit():
-                # É um ticket numérico (ex: "123456"), então é uma linha de operação válida.
+            ticket_val = str(row[1]).strip()
+            if ticket_val.replace('.', '').isdigit():
                 rows_to_keep.append(row)
             else:
-                # ACABOU A TABELA DE POSIÇÕES. PARA DE LER.
-                break
+                break  # Fim da tabela
 
         if not rows_to_keep:
-            return {"erro:" "Tabela de Posições encontrada, mas parece estar vazia."}
+            return {"erro": "Tabela vazia."}
         
-        # 4. CRIAÇÃO DO DATAFRAME LIMPO
-        # Recria o DataFrame apenas com as linhas salvas
+        # 2. MONTAR DATAFRAME
         df = pd.DataFrame(rows_to_keep)
 
-        # 5. RENOMEAR COLUNAS
+        # Mapeamento de colunas (Ordem fixa do MT5)
+
         novos_nomes = [
             'time_open', 'ticket', 'symbol', 'type', 'volume', 'price_open',
             'sl', 'tp', 'time_close', 'price_close', 'commission', 'swap', 'profit'
         ]
-        
-        # Verifica se temos colunas suficientes
-        if len(df.columns) < 13:
-            # Se tiver menos colunas, tenta aproveitar o que tem (fallback)
-            cols_to_use = min(len(df.columns), 13)
-            mapeamento = {i: novos_nomes[i] for i in range(cols_to_use)}
-        else:
-            mapeamento = {i: novos_nomes[i] for i in range(13)}
 
+        # Ajuste seguro de colunas
+        cols_count = min(len(df.columns), 13)
+        mapeamento = {i: novos_nomes[i] for i in range(cols_count)}
         df.rename(columns=mapeamento, inplace=True)
 
+        # 3. GRAVAÇÃO DO BANCO DE DADOS
+        contador_novos = 0
 
-        # 6. TRATAMENTO FINANCEIRO (Vírgula vs Ponto)
-        cols_financeiras = ['profit', 'swap', 'commission']
-        for col in cols_financeiras:
-            if col in df.columns:
-                # Converte para string, troca vírgula por ponto
-                df[col] = df[col].astype(str).str.replace(',', '.', regex=False)
-                # Converte para float, transformando erros em 0
-                df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
+        for index, row in df.iterrows():
+            ticket_atual = str(row['ticket'])
 
-        # 7. CÁLCULO FINAL
-        # Se alguma coluna faltar, assume 0
-        lucro = df['profit'] if 'profit' in df.columns else 0
-        swap = df['swap'] if 'swap' in df.columns else 0
-        comissao = df['commission'] if 'commission' in df.columns else 0
+            # VERIFICAÇÃO DE DUPLICADADE:
+            existe = Trade.query.filter_by(user_id=user.id, ticket=ticket_atual).first()
 
+            if not existe:
+                # Se não existe, cria o objeto Trade
+                novo_trade = Trade(
+                    user_id=user.id,
+                    ticket=ticket_atual,
+                    symbol=str(row['symbol']),
+                    type=str(row['type']),
+                    volume=float(str(row['volume']).replace(',', '.')),
 
-        df['net_result'] = lucro + swap + comissao
+                    # Datas (Pandas ajuda a converter)
+                    open_time=pd.to_datetime(row['time_open'], dayfirst=True),
+                    close_time=pd.to_datetime(row['time_close'], dayfirst=True),
 
-        # Estatísticas
-        total_trades = len(df)
-        resultado_financeiro = df['net_result'].sum()
-        maior_lucro = df['net_result'].max()
-        maior_perda = df['net_result'].min()
+                    open_price=float(str(row['price_open']).replace(',', '.')),
+                    close_price=float(str(row['price_close']).replace(',', '.')),
+                    sl=float(str(row['sl']).replace(',', '.')),
+                    tp=float(str(row['tp']).replace(',', '.')),
+
+                    commission=float(str(row['commission']).replace(',', '.')),
+                    swap=float(str(row['swap']).replace(',', '.')),
+                    profit=float(str(row['profit']).replace(',', '.')),
+                )
+
+                # Calcula o líquido
+                novo_trade.net_result = novo_trade.profit + novo_trade.commission + novo_trade.swap
+
+                # Adiciona no carrinho do banco
+                db.session.add(novo_trade)
+                contador_novos += 1
+
+            # Salva tudo de uma vez
+            db.session.commit()
+
+            return {"sucesso": True, "novos_trades": contador_novos}
         
+
+    except Exception as e:
+        db.session.rollback()  # Cancela se der erro no meio
+        print(f"ERRO AO SALVAR: {e}")
+        return {"erro": str(e)}
+    
+def gerar_dados_dashboard(user):
+    """
+    Lê os trades DO BANCO DE DADOS e gera estatísticas para a tela.
+    """
+    # 1. Busca todos os trades do usuário ordenados por data de fechamento
+    trades = user.trades.order_by(Trade.close_time).all()
+
+    if not trades:
+        # Retorna dados vazios se não tiver nada
+        return {
+            "total_trades": 0,
+            "resultado_financeiro": 0,
+            "maior_ganho": 0,
+            "maior_perda": 0,
+            "taxa_acerto": 0,
+            "profit_factor": 0,
+            "grafico_dados": [],
+            "lista_trades": []
+        }
+    
+    # 2. Converte Objetos do Banco para DataFrame do Pandas (para facilitar cálculos)
+    dados_lista = []
+    for t in trades:
+        dados_lista.append({
+            'ticket': t.ticket,
+            'symbol': t.symbol,
+            'type': t.type,
+            'volume': t.volume,
+            'price_open': t.price_open,
+            'price_close': t.price_close,
+            'net_result': t.net_result,
+            'close_time': t.close_time
+        })
+
+    df = pd.DataFrame(dados_lista)
+
+    # 3. CÁLCULOS (Iguais aos de antes)
+    total_trades = len(df)
+    resultado_financeiro = df['net_result'].sum()
+    maior_lucro = df['net_result'].max()
+    maior_prejuizo = df['net_result'].min()
+
+    if total_trades > 0:
+        trades_vencedores = len(df[df['net_result'] > 0])
+        taxa_acerto = (trades_vencedores / total_trades) * 100
+
+        soma_ganhos = df[df['net_result'] > 0]['net_result'].sum()
+        soma_perdas = abs(df[df['net_result'] < 0]['net_result'].sum())
+        profit_factor = round(soma_ganhos / soma_perdas, 2) if soma_perdas > 0 else 99.99
+    else:
         taxa_acerto = 0
         profit_factor = 0
 
-        if total_trades > 0:
-            trades_vencedores = len(df[df['net_result'] > 0])
-            taxa_acerto = (trades_vencedores / total_trades) * 100
-        
-            # Profit Factor
-            soma_ganhos = df[df['net_result'] > 0]['net_result'].sum()
-            soma_perdas = abs(df[df['net_result'] < 0]['net_result'].sum())
-            profit_factor = round(soma_ganhos / soma_perdas, 2) if soma_perdas > 0 else 99.99
-        
-        # PREPARA DADOS PARA O GRÁFICO
-        # cumsum() faz a suma acumulada: [10, -5, 20] vira [10, 5, 25]
-        # tolist() converte do formato Pandas para lista simples do Python
-        lista_patrimonio = df['net_result'].cumsum().tolist()
+    # Gráfico (Soma Acumulada)
+    lista_patrimonio = df['net_result'].cumsum().tolist()
+    lista_patrimonio.insert(0, 0)
 
-        # Adiciona um 0 no começo para o gráfico partir da origem
-        lista_patrimonio.insert(0, 0)
+    # Lista de Trades (Já temos na lista de dicionários, só inverter para o mais recente primeiro)
+    lista_trades_recente = df.sort_values(by='close_time', ascending=False).to_dict('records')
 
-        # Converter o DataFrame em uma lista de dionários para o HTML 
-        lista_trades = df.to_dict('records')
-
-        return {
-            "sucesso": True,
-            "total_trades": int(total_trades),
-            "resultado_financeiro": round(resultado_financeiro, 2),
-            "maior_ganho": round(maior_lucro, 2),
-            "maior_perda": round(maior_perda, 2),
-            "taxa_acerto": round(taxa_acerto, 2),
-            "profit_factor": profit_factor,
-            "grafico_dados": lista_patrimonio,
-            "lista_trades": lista_trades
-        }
-
-    except Exception as e:
-        print(f"ERRO CRÍTICO NO PROCESSAMENTO: {e}")
-        # Retorna o erro para vermos na tela o que houve
-        return {"erro": f"Falha interna: {str(e)}"}
+    return {
+        "sucesso": True,
+        "total_trades": int(total_trades),
+        "resultado_financeiro": round(resultado_financeiro, 2),
+        "maior_ganho": round(maior_lucro, 2),
+        "maior_perda": round(maior_prejuizo, 2),
+        "taxa_acerto": round(taxa_acerto, 2),
+        "profit_factor": profit_factor,
+        "grafico_dados": lista_patrimonio,
+        "lista_trades": lista_trades_recente
+    }

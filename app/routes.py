@@ -4,7 +4,7 @@ from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import app, db, login
 from app.models import User
-from app.services import processar_relatorio
+from app.services import salvar_trades_do_excel, gerar_dados_dashboard
 
 # Configuração> Onde salvar o arquivo?
 # Pega o diretório atual do projeto + app + uploads
@@ -31,25 +31,42 @@ def load_user(id):
     return db.session.get(User, int(id))  # Busca o usuário pelo ID no banco
 
 # --- Rota Principal (Home) ---
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    # Se logado, tenta renderizar o dashboard, mas com dados seguros zerados
-    if current_user.is_authenticated:
-        # Cria um objeto 'fake' com zeros para não quebrar o HTML
-        dados_vazios = {
-            "total_tardes": 0,
-            "resultado_financeiro": 0.0,
-            "maior_ganho": 0.0,
-            "maior_perda": 0.0,
-            "taxa_acerto": 0.0,
-            "profit_factor": 0.0,
-            "grafico_dados": [],
-            "lista_trades": []
-        }
-        return render_template('dashboard.html', dados=dados_vazios)
+    # 1. Se for Visitante -> Mostra Landing Page
+    if not current_user.is_authenticated:
+        return render_template('landing.html')
     
-    # Se é visitante, mostra a LandingPage
-    return render_template('landing.html')
+    # 2. Se for Usuário Logado...
+
+    # Lógica de Upload (POST)
+    if request.method == 'POST':
+        file = request.files.get('file')
+        if file and file.filename != '':
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+            file.save(filepath)
+
+            # CHAVA O SERVIÇO DE SALVAR (Passando o usuário atual)
+            resultado = salvar_trades_do_excel(filepath, current_user)
+
+            if 'erro' in resultado:
+                flash(f"Erro: {resultado['erro']}", 'danger')
+            else:
+                qtd = resultado['novos_trades']
+                flash(f"Sucesso! {qtd} novos trades importados para o banco.", 'success')
+
+            # Remove o arquivo temporário para não lotar o servidor
+            if os.path.exists(filepath):
+                os.remove(filepath)
+
+            return redirect(url_for('index'))
+        
+    # Lógica de Exibição (GET)
+    # Busca os dados DO BANCO DE DADOS, não importa se acabou de fazer upload ou não
+    dados_dashboard = gerar_dados_dashboard(current_user)
+
+    return render_template('dashboard.html', dados=dados_dashboard)
+
 
 # --- Rota Dashboard ---
 @app.route('/dashboard', methods=['GET', 'POST'])
