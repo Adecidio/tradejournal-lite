@@ -16,14 +16,14 @@ if not os.path.exists(UPLOAD_FOLDER):
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # --- ROTA TEMPORÁRIA ---
-#@app.route('/reset-banco-completo')
-#def reset_banco():
-#    try:
-#        db.drop_all()
-#        db.create_all()
-#        return "<h1>Sucesso!</h1> <p>Banco resetado. Tabela antiga 'user' removida e tabela nova 'users' criada.</p>"
-#    except Exception as e:
-#        return f"<h1>Erro:</h1> <p>{str(e)}</p>"
+@app.route('/reset-banco-completo')
+def reset_banco():
+    try:
+        db.drop_all()
+        db.create_all()
+        return "<h1>Sucesso!</h1> <p>Banco resetado. Tabela antiga 'user' removida e tabela nova 'users' criada.</p>"
+    except Exception as e:
+        return f"<h1>Erro:</h1> <p>{str(e)}</p>"
     
 # --- Função Auxiliar para o Flask-Login saber quem é quem ---
 @login.user_loader
