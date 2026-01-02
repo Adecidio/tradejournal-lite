@@ -1,6 +1,30 @@
 {% extends "base.html" %}
 
 {% block content %}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h4 class="mb-0">Meu Diário de Trades 📈</h4>
+                        <small class="text-muted">Analise sua evolução no mercado.</small>
+                    </div>
+                    <div class="col-md-6">
+                        <form action="{{ url_for('index') }}" method="post" enctype="multipart/form-data" class="d-flex justify-content-end align-items-center gap-2">
+                            <label for="fileUpload" class="form-label mb-0 visually-hidden">Upload</label>
+                            <input type="file" class="form-control" id="fileUpload" name="file" accept=".xlsx, .xls" required style="max-width: 300px;">
+                            <button type="submit" class="btn btn-success">
+                                Importar 📤
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="text-center mb-5">
     <h2>📊 Resultado da Análise</h2>
     <a href="{{ url_for('index') }}" class="btn btn-outilne-secondary btn-sm">⬅ Voltar</a>
