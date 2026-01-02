@@ -53,6 +53,8 @@ class Trade(db.Model):
     swap = db.Column(db.Float, default=0.0)
     profit = db.Column(db.Float, default=0.0)
 
+    net_result = db.Column(db.Float, default=0.0)
+
     # Resultado calculado (Profit + Swap + Commission)
 
     def __repr__(self):
