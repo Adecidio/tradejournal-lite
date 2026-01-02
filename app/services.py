@@ -26,6 +26,7 @@ def salvar_trades_do_excel(filepath, user):
 
         for row in candidate_rows:
             ticket_val = str(row[1]).strip()
+            # Verifica se é numérico (ignora linhas de totais)
             if ticket_val.replace('.', '').isdigit():
                 rows_to_keep.append(row)
             else:
@@ -59,26 +60,39 @@ def salvar_trades_do_excel(filepath, user):
             existe = Trade.query.filter_by(user_id=user.id, ticket=ticket_atual).first()
 
             if not existe:
-                # Se não existe, cria o objeto Trade
+                # --- CORREÇÃO DAS DATAS ---
+                try:
+                    dt_open = pd.to_datetime(row['time_open'], dayfirst=False, errors='coerce')
+                    dt_close = pd.to_datetime(row['time_close'], dayfirst=False, errors='coerce')
+                except:
+                    dt_open = None
+                    dt_close = None
+
+                # Tratamento de Valoes float (troca vírgula por ponto)
+                def clean_float(val):
+                    try:
+                        return float(str(val).replace(',', '.'))
+                    except:
+                        return 0.0
+                    
                 novo_trade = Trade(
                     user_id=user.id,
                     ticket=ticket_atual,
                     symbol=str(row['symbol']),
                     type=str(row['type']),
-                    volume=float(str(row['volume']).replace(',', '.')),
+                    volume=clean_float(row['volume']),
+                    
+                    open_time=dt_close,
+                    close_time=dt_close,
 
-                    # Datas (Pandas ajuda a converter)
-                    open_time=pd.to_datetime(row['time_open'], dayfirst=True),
-                    close_time=pd.to_datetime(row['time_close'], dayfirst=True),
+                    open_price=clean_float(row['price_open']),
+                    close_price=clean_float(row['price_close']),
+                    sl=clean_float(row['sl']),
+                    tp=clean_float(row['tp']),
 
-                    open_price=float(str(row['price_open']).replace(',', '.')),
-                    close_price=float(str(row['price_close']).replace(',', '.')),
-                    sl=float(str(row['sl']).replace(',', '.')),
-                    tp=float(str(row['tp']).replace(',', '.')),
-
-                    commission=float(str(row['commission']).replace(',', '.')),
-                    swap=float(str(row['swap']).replace(',', '.')),
-                    profit=float(str(row['profit']).replace(',', '.')),
+                    commission=clean_float(row['commission']),
+                    swap=clean_float(row['swap']),
+                    profit=clean_float(row['profit']),
                 )
 
                 # Calcula o líquido
@@ -134,6 +148,10 @@ def gerar_dados_dashboard(user):
         })
 
     df = pd.DataFrame(dados_lista)
+
+    # --- PROTEÇÃO CONTRA DADOS VAZIOS ---
+    if 'close_time' in df.columns:
+        df['close_time'] = pd.to_datetime(df['close_time']).fillna(pd.Timestamp('1970-01-01'))
 
     # 3. CÁLCULOS (Iguais aos de antes)
     total_trades = len(df)
