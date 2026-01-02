@@ -13,7 +13,7 @@ def salvar_trades_do_excel(filepath, user):
         df_raw = pd.read_excel(filepath, header=None)
 
         header_index = None
-        for i, row in df_raw.head(30).iterrows():
+        for i, row in df_raw.head(50).iterrows():
             row_text = [str(val).lower() for val in row.values]
             if any(x in row_text for x in ['position', 'ticket']) and any(x in row_text for x in ['lucro', 'profit']):
                 header_index = i
@@ -25,15 +25,25 @@ def salvar_trades_do_excel(filepath, user):
         candidate_rows = df_raw.iloc[header_index + 1:].values
 
         for row in candidate_rows:
-            ticket_val = str(row[1]).strip()
-            # Verifica se é numérico (ignora linhas de totais)
-            if ticket_val.replace('.', '').isdigit():
+            raw_val = row[1]  # Coluna do Ticket
+
+            # --- NOVA LÓGICA ---
+            try:
+                # Se for vazio ou NaN, paramos
+                if pd.isna(raw_val) or str(raw_val).strip() == '':
+                    break
+
+                # Tenta converter: Se for texto "Total", vai dar erro e pular pro except
+                float_val = float(raw_val)
+
+                # Se converteu com sucesso, é uma linha válida!
                 rows_to_keep.append(row)
-            else:
-                break  # Fim da tabela
+            except ValueError:
+                # Se deu erro (ex: tentou converter a palavra "Total" para numero),
+                break
 
         if not rows_to_keep:
-            return {"erro": "Tabela vazia."}
+            return {"erro": "Tabela vazia ou tickets não identificados."}
         
         # 2. MONTAR DATAFRAME
         df = pd.DataFrame(rows_to_keep)
@@ -54,10 +64,13 @@ def salvar_trades_do_excel(filepath, user):
         contador_novos = 0
 
         for index, row in df.iterrows():
-            ticket_atual = str(row['ticket'])
+            # Tratamento especial para o Ticket: converter float 12345.0 para string "12345"
+            try:
+                ticket_limpo = str(int(float(row['ticket'])))
+            except:
+                ticket_limpo = str(row['ticket'])
 
-            # VERIFICAÇÃO DE DUPLICADADE:
-            existe = Trade.query.filter_by(user_id=user.id, ticket=ticket_atual).first()
+            existe = Trade.query_filter_by(user_id=user.id, ticket=ticket_limpo).first()
 
             if not existe:
                 # --- CORREÇÃO DAS DATAS ---
@@ -77,7 +90,7 @@ def salvar_trades_do_excel(filepath, user):
                     
                 novo_trade = Trade(
                     user_id=user.id,
-                    ticket=ticket_atual,
+                    ticket=ticket_limpo,
                     symbol=str(row['symbol']),
                     type=str(row['type']),
                     volume=clean_float(row['volume']),
