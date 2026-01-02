@@ -70,7 +70,7 @@ def salvar_trades_do_excel(filepath, user):
             except:
                 ticket_limpo = str(row['ticket'])
 
-            existe = Trade.query_filter_by(user_id=user.id, ticket=ticket_limpo).first()
+            existe = Trade.query.filter_by(user_id=user.id, ticket=ticket_limpo).first()
 
             if not existe:
                 # --- CORREÇÃO DAS DATAS ---
