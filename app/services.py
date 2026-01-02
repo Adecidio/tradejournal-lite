@@ -8,6 +8,7 @@ def salvar_trades_do_excel(filepath, user):
     Lê o Excel, encontra os trades e salva no Banco de Dados.
     Evita duplicatas verificando o número do Ticket.
     """
+    print("--- INICIANDO PROCESSAMENTO DO EXCEL ---") # Log
     try:
         # 1. LEITURA BRUTA
         df_raw = pd.read_excel(filepath, header=None)
@@ -18,42 +19,59 @@ def salvar_trades_do_excel(filepath, user):
             row_text = [str(val).lower() for val in row.values]
             if any(x in row_text for x in ['position', 'ticket']) and any(x in row_text for x in ['lucro', 'profit']):
                 header_index = i
+                print(f"DEBUG: Cabeçalho encontrado na linha{i}")  # Log
                 break
+
         if header_index is None:
+            print("DEBUG: Cabeçalho NÃO encontrado.")
             return {"erro: " "Cabeçalho não encontrado."}
         
-        # --- B. ENCONTRAR O RODAPÉ (FIM) ---
+        # 3. O COLETOR TOLERANTE
+        rows_to_keep = []
+
+        # Começa logo após o cabeçalho
         start_row = header_index + 1
-        end_row = len(df_raw)  # Por padrão, vai até o fim se não achar parada
+        print(f"DEBUG: Começando a varrer dados a partir da linha {start_row}")
 
         for i in range(start_row, len(df_raw)):
-            val = df_raw.iloc[i, 1]  # Pega o valor da coluna Ticket
+            row = df_raw.iloc[i]
 
-            # Limpeza básica do valor para teste
-            val_str = str(val).strip()
+            # Pega o valor da coluna Ticket (índice 1)
+            raw_val = row[1]
+            val_str = str(raw_val).strip()
 
-            # Se for vazio ou Nulo -> Fim da tabela
-            if pd.isna(val) or val_str == "" or val_str.lower() == 'nan':
-                end_row = i
+            # A. SE FOR VAZIO -> PULA (CONTINUE), NÃO PARA!
+            if pd.isna(raw_val) or val_str == "" or val_str.lower() == 'nan':
+                continue
+
+            # B. SE FOR "TOTAL" -> AÍ SIM PARA
+            if "total" in val_str.lower():
+                print(f"DEBUG: Parada acionada. Encontrei a palavra 'Total' na linha {i}")
                 break
 
-            # Tenta converter para número.
+            # C . SE FOR TEXTO ESTRANHO
+            if any(c.isalpha() for c in val_str) and not val_str.replace('.', '', 1).isdigit():
+                print(f"DEBUG: Parada acionada. Encontrei texto não numérico '{val_str}' na linha {i}")
+                break
+
+            # D. TENTA CONVERTER PARA NÚMERO
+            # Se passar aqui, é trade.
             try:
-                # Tenta float direto. Se for string "123", passa.
                 float(val_str.replace(',', '.'))
+                # Se deu certo, guarda a linha inteira!
+                rows_to_keep.append(row)
             except ValueError:
-                # Não é número -> Fim da tabela
-                end_row = i
+                print(f"DEBUG: Parada por erro de conversão na linha {i}. Valor: {val_str}")
                 break
 
-        # --- C. CORTAR O BOLO ---
-        # Pega apenas o fatiamento exato da tabela de Posições
-        df = df_raw.iloc[start_row:end_row].copy()
+        print(f"DEBUG: Total de linhas válidas coletadas: {len(rows_to_keep)}")
 
-        if df.empty:
-            return {"erro": "Tabela vazia encontrada."}
+        if not rows_to_keep:
+            return {"erro": "Nenhum trade válido encontrado."}
         
-        # 2. RENOMEAR E LIMPAR
+        # 4. MONTAR DATAFRAME FINAL
+        df = pd.DataFrame(rows_to_keep)
+
         novos_nomes = [
             'time_open', 'ticket', 'symbol', 'type', 'volume', 'price_open',
             'sl', 'tp', 'time_close', 'price_close', 'commission', 'swap', 'profit'
@@ -64,7 +82,7 @@ def salvar_trades_do_excel(filepath, user):
         mapeamento = {i: novos_nomes[i] for i in range(cols_count)}
         df.rename(columns=mapeamento, inplace=True)
 
-        # 3. GRAVAÇÃO DO BANCO DE DADOS
+        # 5. GRAVAÇÃO DO BANCO DE DADOS
         contador_novos = 0
 
         for index, row in df.iterrows():
@@ -121,13 +139,13 @@ def salvar_trades_do_excel(filepath, user):
 
             # Salva tudo de uma vez
             db.session.commit()
-
+            print(f"DEBUG: Processamento concluído. Novos trades: {contador_novos}")
             return {"sucesso": True, "novos_trades": contador_novos}
         
 
     except Exception as e:
         db.session.rollback()  # Cancela se der erro no meio
-        print(f"ERRO AO SALVAR: {e}")
+        print(f"ERRO CRÍTICO NO SERVICES: {e}")
         return {"erro": str(e)}
     
 def gerar_dados_dashboard(user):
@@ -192,8 +210,12 @@ def gerar_dados_dashboard(user):
     lista_patrimonio.insert(0, 0)
 
     # Lista de Trades (Já temos na lista de dicionários, só inverter para o mais recente primeiro)
-    lista_trades_recente = df.sort_values(by='close_time', ascending=False).to_dict('records')
+    lista_patrimonio = df['net_result'].cumsum().tolist()
+    lista_patrimonio.insert(0, 0)
 
+    df_sorted = df.sort_values(by='close_time', ascending=False)
+    lista_trades_recente = df_sorted.to_dict('records')
+    
     return {
         "sucesso": True,
         "total_trades": int(total_trades),
