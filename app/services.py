@@ -9,9 +9,10 @@ def salvar_trades_do_excel(filepath, user):
     Evita duplicatas verificando o número do Ticket.
     """
     try:
-        # 1. LEITURA E LIMPEZA
+        # 1. LEITURA BRUTA
         df_raw = pd.read_excel(filepath, header=None)
 
+        # --- A. ENCONTRAR O CABEÇALHO (INÍCIO) ---
         header_index = None
         for i, row in df_raw.head(50).iterrows():
             row_text = [str(val).lower() for val in row.values]
@@ -21,35 +22,38 @@ def salvar_trades_do_excel(filepath, user):
         if header_index is None:
             return {"erro: " "Cabeçalho não encontrado."}
         
-        rows_to_keep = []
-        candidate_rows = df_raw.iloc[header_index + 1:].values
+        # --- B. ENCONTRAR O RODAPÉ (FIM) ---
+        start_row = header_index + 1
+        end_row = len(df_raw)  # Por padrão, vai até o fim se não achar parada
 
-        for row in candidate_rows:
-            raw_val = row[1]  # Coluna do Ticket
+        for i in range(start_row, len(df_raw)):
+            val = df_raw.iloc[i, 1]  # Pega o valor da coluna Ticket
 
-            # --- NOVA LÓGICA ---
-            try:
-                # Se for vazio ou NaN, paramos
-                if pd.isna(raw_val) or str(raw_val).strip() == '':
-                    break
+            # Limpeza básica do valor para teste
+            val_str = str(val).strip()
 
-                # Tenta converter: Se for texto "Total", vai dar erro e pular pro except
-                float_val = float(raw_val)
-
-                # Se converteu com sucesso, é uma linha válida!
-                rows_to_keep.append(row)
-            except ValueError:
-                # Se deu erro (ex: tentou converter a palavra "Total" para numero),
+            # Se for vazio ou Nulo -> Fim da tabela
+            if pd.isna(val) or val_str == "" or val_str.lower() == 'nan':
+                end_row = i
                 break
 
-        if not rows_to_keep:
-            return {"erro": "Tabela vazia ou tickets não identificados."}
+            # Tenta converter para número.
+            try:
+                # Tenta float direto. Se for string "123", passa.
+                float(val_str.replace(',', '.'))
+            except ValueError:
+                # Não é número -> Fim da tabela
+                end_row = i
+                break
+
+        # --- C. CORTAR O BOLO ---
+        # Pega apenas o fatiamento exato da tabela de Posições
+        df = df_raw.iloc[start_row:end_row].copy()
+
+        if df.empty:
+            return {"erro": "Tabela vazia encontrada."}
         
-        # 2. MONTAR DATAFRAME
-        df = pd.DataFrame(rows_to_keep)
-
-        # Mapeamento de colunas (Ordem fixa do MT5)
-
+        # 2. RENOMEAR E LIMPAR
         novos_nomes = [
             'time_open', 'ticket', 'symbol', 'type', 'volume', 'price_open',
             'sl', 'tp', 'time_close', 'price_close', 'commission', 'swap', 'profit'
@@ -64,7 +68,7 @@ def salvar_trades_do_excel(filepath, user):
         contador_novos = 0
 
         for index, row in df.iterrows():
-            # Tratamento especial para o Ticket: converter float 12345.0 para string "12345"
+            # Limpa Ticket (tira .0)
             try:
                 ticket_limpo = str(int(float(row['ticket'])))
             except:
