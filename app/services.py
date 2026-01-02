@@ -141,8 +141,8 @@ def gerar_dados_dashboard(user):
             'symbol': t.symbol,
             'type': t.type,
             'volume': t.volume,
-            'price_open': t.price_open,
-            'price_close': t.price_close,
+            'price_open': t.open_price,
+            'price_close': t.close_price,
             'net_result': t.net_result,
             'close_time': t.close_time
         })
