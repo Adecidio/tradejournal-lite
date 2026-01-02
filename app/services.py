@@ -63,8 +63,9 @@ def salvar_trades_do_excel(filepath, user):
             except ValueError:
                 print(f"DEBUG: Parada por erro de conversão na linha {i}. Valor: {val_str}")
                 break
-
-        print(f"DEBUG: Total de linhas válidas coletadas: {len(rows_to_keep)}")
+        
+        total_encontrados = len(rows_to_keep)
+        print(f"DEBUG: Linhas válidas na memória: {total_encontrados}")
 
         if not rows_to_keep:
             return {"erro": "Nenhum trade válido encontrado."}
@@ -84,13 +85,20 @@ def salvar_trades_do_excel(filepath, user):
 
         # 5. GRAVAÇÃO DO BANCO DE DADOS
         contador_novos = 0
+        contador_loop = 0
+
+        print("--- ENTRANDO NO LOOP DE GRAVAÇÃO ---")
 
         for index, row in df.iterrows():
+            contador_loop += 1
+
             # Limpa Ticket (tira .0)
             try:
                 ticket_limpo = str(int(float(row['ticket'])))
             except:
                 ticket_limpo = str(row['ticket'])
+
+            print(f"Processando linha {contador_loop}/{total_encontrados} - Ticket: {ticket_limpo}")
 
             existe = Trade.query.filter_by(user_id=user.id, ticket=ticket_limpo).first()
 
@@ -138,11 +146,11 @@ def salvar_trades_do_excel(filepath, user):
                 # Adiciona no carrinho do banco
                 db.session.add(novo_trade)
                 contador_novos += 1
-                print(f"SUCESSO: Ticket {ticket_limpo} adicionado à fila.")
+                print(f"SALVO: Ticket {ticket_limpo} adicionado à fila.")
             # Salva tudo de uma vez
-            db.session.commit()
-            print(f"--- FIM. NOVOS TRADES SALVOS: {contador_novos} ---")
-            return {"sucesso": True, "novos_trades": contador_novos}
+        db.session.commit()
+        print(f"--- FIM. NOVOS TRADES SALVOS: {contador_novos} ---")
+        return {"sucesso": True, "novos_trades": contador_novos}
         
 
     except Exception as e:
