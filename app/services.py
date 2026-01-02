@@ -94,8 +94,10 @@ def salvar_trades_do_excel(filepath, user):
 
             existe = Trade.query.filter_by(user_id=user.id, ticket=ticket_limpo).first()
 
-            if not existe:
-                # --- CORREÇÃO DAS DATAS ---
+            if existe:
+                print(f"AVISO: Ticket {ticket_limpo} já existe no banco. Ignorando.")
+            else:
+                # Se não existe, vamos criar!
                 try:
                     dt_open = pd.to_datetime(row['time_open'], dayfirst=False, errors='coerce')
                     dt_close = pd.to_datetime(row['time_close'], dayfirst=False, errors='coerce')
@@ -136,10 +138,10 @@ def salvar_trades_do_excel(filepath, user):
                 # Adiciona no carrinho do banco
                 db.session.add(novo_trade)
                 contador_novos += 1
-
+                print(f"SUCESSO: Ticket {ticket_limpo} adicionado à fila.")
             # Salva tudo de uma vez
             db.session.commit()
-            print(f"DEBUG: Processamento concluído. Novos trades: {contador_novos}")
+            print(f"--- FIM. NOVOS TRADES SALVOS: {contador_novos} ---")
             return {"sucesso": True, "novos_trades": contador_novos}
         
 
@@ -215,7 +217,7 @@ def gerar_dados_dashboard(user):
 
     df_sorted = df.sort_values(by='close_time', ascending=False)
     lista_trades_recente = df_sorted.to_dict('records')
-    
+
     return {
         "sucesso": True,
         "total_trades": int(total_trades),
