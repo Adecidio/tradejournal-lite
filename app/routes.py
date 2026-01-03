@@ -3,7 +3,7 @@ from flask import render_template, request, redirect, url_for, flash
 from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import app, db, login
-from app.models import User
+from app.models import User, Trade
 from app.services import salvar_trades_do_excel, gerar_dados_dashboard
 
 # Configuração> Onde salvar o arquivo?
@@ -65,10 +65,7 @@ def index():
     # Busca os dados DO BANCO DE DADOS, não importa se acabou de fazer upload ou não
     dados_dashboard = gerar_dados_dashboard(current_user)
 
-    return render_template('dashboard.html', dados=dados_dashboard)
-
-
-    
+    return render_template('dashboard.html', dados=dados_dashboard) 
 
 # --- Rota de Login ---
 @app.route('/login', methods=['GET', 'POST'])
@@ -152,4 +149,22 @@ def fake_checkout():
 
     # 4. Feedback para o usuário
     flash('Pagamento confirmado! Bem-vindo ao time Premium 🚀', 'success')
+    return redirect(url_for('index'))
+
+@app.route('/limpar-dados', methods=['POST'])
+@login_required
+def limpar_dados():
+    try:
+        # Apaga TODOS os trades onde o user_id é igual ao do utilizador atual
+        num_deleted = Trade.query.filter_by(user_id=current_user.id).delete()
+
+        # IMPORTANTE: O commit para confirmar a exclusão!
+        db.session.commit()
+
+        flash(f'Histórico limpo! {num_deleted} operações forma removidas.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Erro ao limpar o histórico.', 'danger')
+        print(f"Erro ao deletar: {e}")
+
     return redirect(url_for('index'))

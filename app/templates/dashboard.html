@@ -2,6 +2,9 @@
 
 {% block content %}
 
+<div class="text-center mb-5">
+    <h2>📊 Resultado da Análise</h2>
+</div>
 <div class="row mb-4">
     <div class="col-12">
         <div class="card border-0 shadow-sm">
@@ -11,23 +14,45 @@
                         <h4 class="mb-0">Meu Diário de Trades 📈</h4>
                         <small class="text-muted">Analise sua evolução no mercado.</small>
                     </div>
-                    <div class="col-md-6">
-                        <form action="{{ url_for('index') }}" method="post" enctype="multipart/form-data" class="d-flex justify-content-end align-items-center gap-2">
-                            <label for="fileUpload" class="form-label mb-0 visually-hidden">Upload</label>
-                            <input type="file" class="form-control" id="fileUpload" name="file" accept=".xlsx, .xls" required style="max-width: 300px;">
-                            <button type="submit" class="btn btn-success">
-                                Importar 📤
+                    <div class="col-md-7">
+                        <div class="d-flex justify-content-end align-items-center gap-2">
+                            <form action="{{ url_for('index') }}" method="post" enctype="multipart/form-data" class="d-flex justify-content-end align-items-center gap-2">
+                                <label for="fileUpload" class="form-label mb-0 visually-hidden">Upload</label>
+                                <input type="file" class="form-control" id="fileUpload" name="file" accept=".xlsx, .xls" required style="max-width: 300px;">
+                                <button type="submit" class="btn btn-success">
+                                    Importar 📤
+                                </button>
+                            </form>
+                            <div class="vr mx-2"></div>
+                            <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalLimpar">
+                                Limpar Tudo 🗑️
                             </button>
-                        </form>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<div class="text-center mb-5">
-    <h2>📊 Resultado da Análise</h2>
-    <a href="{{ url_for('index') }}" class="btn btn-outilne-secondary btn-sm">⬅ Voltar</a>
+<div class="modal fade" id="modelLimpar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">Atenção! ⚠️</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem a certeza que deseja apagar <strong>TODO</strong> o seu histórico de trades?</p>
+                <p class="small text-muted mb-0">Esta ação não pode ser desfeita. Os seus gráficos ficarão a zero.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form action="{{ url_for('limpar_dados') }}" method="post">
+                    <button type="submit" class="btn btn-danger">Sim, apagar tudo</button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 <div class="row text-center">
     <div class="col-md-4 mb-3">
