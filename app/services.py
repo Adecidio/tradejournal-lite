@@ -14,49 +14,64 @@ def salvar_trades_do_excel(filepath, user):
 
         # --- A. ENCONTRAR O CABEÇALHO (INÍCIO) ---
         header_index = None
-        for i, row in df_raw.head(50).iterrows():
+        for i, row in df_raw.head(100).iterrows():
             row_text = [str(val).lower() for val in row.values]
-            if any(x in row_text for x in ['position', 'ticket']) and any(x in row_text for x in ['lucro', 'profit']):
+
+            print(f"DEBUG:Linha {i}: {row_text}")
+
+            tem_ticket = any(x in row_text for x in ['ticket', 'boleta', 'ordem'])
+            tem_lucro = any(x in row_text for x in ['lucro', 'profit', 'resultado'])
+
+            if tem_ticket and tem_lucro:
                 header_index = i
+                print(f"DEBUG: Cabeçalho ENCONTRADO na linha {i}")
                 break
 
         if header_index is None:
-            return {"erro: " "Cabeçalho não encontrado."}
+            print("DEBUG: ERRO - Cabeçalho NÃO encontrado nas primeiras 100 linhas.")
+            print("Amostra do arquivo:", df_raw.head().to_string())
+            return {"erro: " "Cabeçalho (Ticket/Profit) não encontrado."}
         
         # 3. O COLETOR TOLERANTE
         rows_to_keep = []
 
         # Começa logo após o cabeçalho
         start_row = header_index + 1
+
+        # Contadores para o diagnóstico
+        count_vazios = 0
+        count_texto = 0
+        count_total = 0
+
         for i in range(start_row, len(df_raw)):
             row = df_raw.iloc[i]
+            val_str = str(row[1]).strip() # Coluna do Ticket
 
-            # Pega o valor da coluna Ticket (índice 1)
-            raw_val = row[1]
-            val_str = str(raw_val).strip()
-
-            # A. SE FOR VAZIO -> PULA (CONTINUE), NÃO PARA!
-            if pd.isna(raw_val) or val_str == "" or val_str.lower() == 'nan':
+            # Ignora vazios
+            if pd.isna(row[1]) or val_str == "" or val_str.lower() == 'nan':
+                count_vazios += 1
                 continue
 
-            # B. SE FOR "TOTAL" -> AÍ SIM PARA
+            # Para se achar "Total"
             if "total" in val_str.lower():
+                print(f"DEBUG: Parada por 'Total' na linha {i}")
+                count_total += 1
                 break
 
-            # C . SE FOR TEXTO ESTRANHO
-            if any(c.isalpha() for c in val_str) and not val_str.replace('.', '', 1).isdigit():
-                break
-
-            # D. TENTA CONVERTER PARA NÚMERO
-            # Se passar aqui, é trade.
+            # Tenta converter para numero
             try:
                 float(val_str.replace(',', '.'))
                 # Se deu certo, guarda a linha inteira!
                 rows_to_keep.append(row)
             except ValueError:
-                break
+                count_texto += 1
+                print(f"DEBUG: Linha {i} ignorada (não é número): {val_str}")
+                continue
         
-        total_encontrados = len(rows_to_keep)
+        print(f"DEBUG: Resumo da Leitura:")
+        print(f"   - Linhas Válidas Coletadas: {len(rows_to_keep)}")
+        print(f"   - Linhas Vazias Ignoradas: {count_vazios}")
+        print(f"   - Linhas de Texto Ignoradas: {count_texto}")
 
         if not rows_to_keep:
             return {"erro": "Nenhum trade válido encontrado."}
@@ -76,12 +91,9 @@ def salvar_trades_do_excel(filepath, user):
 
         # 5. GRAVAÇÃO DO BANCO DE DADOS
         contador_novos = 0
-        contador_loop = 0
+        contador_duplicados = 0
 
         for index, row in df.iterrows():
-            contador_loop += 1
-
-            # Limpa Ticket (tira .0)
             try:
                 ticket_limpo = str(int(float(row['ticket'])))
             except:
@@ -133,6 +145,14 @@ def salvar_trades_do_excel(filepath, user):
                 contador_novos += 1
             # Salva tudo de uma vez
         db.session.commit()
+
+        print(f"DEBUG: Resultado Final no Banco:")
+        print(f"   - Novos Salvos: {contador_novos}")
+        print(f"   - Duplicados Ignorados: {contador_duplicados}")
+
+        if contador_novos == 0 and contador_duplicados > 0:
+            return {"sucesso": True, "novos_trades": 0, "msg": "Todos os trades já existiam."}
+
         return {"sucesso": True, "novos_trades": contador_novos}
         
 
