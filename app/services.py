@@ -8,7 +8,6 @@ def salvar_trades_do_excel(filepath, user):
     Lê o Excel, encontra os trades e salva no Banco de Dados.
     Evita duplicatas verificando o número do Ticket.
     """
-    print("--- INICIANDO PROCESSAMENTO DO EXCEL ---") # Log
     try:
         # 1. LEITURA BRUTA
         df_raw = pd.read_excel(filepath, header=None)
@@ -19,11 +18,9 @@ def salvar_trades_do_excel(filepath, user):
             row_text = [str(val).lower() for val in row.values]
             if any(x in row_text for x in ['position', 'ticket']) and any(x in row_text for x in ['lucro', 'profit']):
                 header_index = i
-                print(f"DEBUG: Cabeçalho encontrado na linha{i}")  # Log
                 break
 
         if header_index is None:
-            print("DEBUG: Cabeçalho NÃO encontrado.")
             return {"erro: " "Cabeçalho não encontrado."}
         
         # 3. O COLETOR TOLERANTE
@@ -31,8 +28,6 @@ def salvar_trades_do_excel(filepath, user):
 
         # Começa logo após o cabeçalho
         start_row = header_index + 1
-        print(f"DEBUG: Começando a varrer dados a partir da linha {start_row}")
-
         for i in range(start_row, len(df_raw)):
             row = df_raw.iloc[i]
 
@@ -46,12 +41,10 @@ def salvar_trades_do_excel(filepath, user):
 
             # B. SE FOR "TOTAL" -> AÍ SIM PARA
             if "total" in val_str.lower():
-                print(f"DEBUG: Parada acionada. Encontrei a palavra 'Total' na linha {i}")
                 break
 
             # C . SE FOR TEXTO ESTRANHO
             if any(c.isalpha() for c in val_str) and not val_str.replace('.', '', 1).isdigit():
-                print(f"DEBUG: Parada acionada. Encontrei texto não numérico '{val_str}' na linha {i}")
                 break
 
             # D. TENTA CONVERTER PARA NÚMERO
@@ -61,11 +54,9 @@ def salvar_trades_do_excel(filepath, user):
                 # Se deu certo, guarda a linha inteira!
                 rows_to_keep.append(row)
             except ValueError:
-                print(f"DEBUG: Parada por erro de conversão na linha {i}. Valor: {val_str}")
                 break
         
         total_encontrados = len(rows_to_keep)
-        print(f"DEBUG: Linhas válidas na memória: {total_encontrados}")
 
         if not rows_to_keep:
             return {"erro": "Nenhum trade válido encontrado."}
@@ -87,8 +78,6 @@ def salvar_trades_do_excel(filepath, user):
         contador_novos = 0
         contador_loop = 0
 
-        print("--- ENTRANDO NO LOOP DE GRAVAÇÃO ---")
-
         for index, row in df.iterrows():
             contador_loop += 1
 
@@ -98,13 +87,9 @@ def salvar_trades_do_excel(filepath, user):
             except:
                 ticket_limpo = str(row['ticket'])
 
-            print(f"Processando linha {contador_loop}/{total_encontrados} - Ticket: {ticket_limpo}")
-
             existe = Trade.query.filter_by(user_id=user.id, ticket=ticket_limpo).first()
 
             if existe:
-                print(f"AVISO: Ticket {ticket_limpo} já existe no banco. Ignorando.")
-            else:
                 # Se não existe, vamos criar!
                 try:
                     dt_open = pd.to_datetime(row['time_open'], dayfirst=False, errors='coerce')
@@ -146,10 +131,8 @@ def salvar_trades_do_excel(filepath, user):
                 # Adiciona no carrinho do banco
                 db.session.add(novo_trade)
                 contador_novos += 1
-                print(f"SALVO: Ticket {ticket_limpo} adicionado à fila.")
             # Salva tudo de uma vez
         db.session.commit()
-        print(f"--- FIM. NOVOS TRADES SALVOS: {contador_novos} ---")
         return {"sucesso": True, "novos_trades": contador_novos}
         
 
