@@ -82,6 +82,53 @@
         </div>
     </div>
 </div>
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 py-3">
+                <h5 class="mb-0 fw-bold text-secondary">🏆 Performance por Ativo</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-2">Ativo</th>
+                                <th class="text-end pe-4">Resultado Acumulado</th>
+                                <th class="text-end pe-4">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ativo in dados.performance_ativos %}
+                            <tr>
+                                <td class="ps-4 fw-bold">{{ ativo.symbol }}</td>
+                                <td class="text-end pe-4 fw-bold {{ 'text-success' if ativo.net_result >= 0 else 'text-danger' }}">
+                                    R$ {{ ativo.net_result|round(2) }}
+                                </td>
+                                <td class="text-end pe-4">
+                                    {% if ativo.net_result > 0 %}
+                                        <span class="badge bg-success rounded-pill">Lucro</span>
+                                    {% elif ativo.net_result < 0 %}
+                                        <span class="badge bg-danger rounded-pill">Prejuízo</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary rounded-pill">0 a 0</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-3">
+                                    Nenhum dado para analisar ainda.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="row mt-4 mb-4">
     <div class="col-12">
         <div class="card shadow border-0">

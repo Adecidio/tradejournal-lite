@@ -146,7 +146,7 @@ def gerar_dados_dashboard(user):
         return {
             "total_trades": 0, "resultado_financeiro": 0, "maior_ganho": 0,
             "maior_perda": 0, "taxa_acerto": 0, "profit_factor": 0,
-            "grafico_dados": [], "lista_trades": []
+            "grafico_dados": [], "lista_trades": [], "performance_ativos": []
         }
 
     dados_lista = []
@@ -167,6 +167,7 @@ def gerar_dados_dashboard(user):
     if 'close_time' in df.columns:
         df['close_time'] = pd.to_datetime(df['close_time']).fillna(pd.Timestamp('1970-01-01'))
     
+    # --- CÁLCULOS GERAIS
     total_trades = len(df)
     resultado_financeiro = df['net_result'].sum()
     maior_lucro = df['net_result'].max()
@@ -183,9 +184,22 @@ def gerar_dados_dashboard(user):
         taxa_acerto = 0
         profit_factor = 0
 
+    # --- PERFORMANCE POR ATIVO ---
+    # Agrupa pelo símbolo e soma o resultado financeiro
+    # Reset index transforma o agrupamento de volta em colunas normais
+    df_ativos = df.groupby('symbol')['net_result'].sum().reset_index()
+
+    # Ordena do maior lucro para o menor (ou maior prejuízo)
+    df_ativos = df_ativos.sort_values(by='net_result', ascending=False)
+
+    # Converte para lista de dicionários para o HTML ler
+    performance_ativos = df_ativos.to_dict('records')
+
+    # Gráfico de Curva de Patrimônio
     lista_patrimonio = df['net_result'].cumsum().tolist()
     lista_patrimonio.insert(0, 0)
     
+    # Lista de Trades Detalhada
     df_sorted = df.sort_values(by='close_time', ascending=False)
     lista_trades_recente = df_sorted.to_dict('records')
 
@@ -198,5 +212,6 @@ def gerar_dados_dashboard(user):
         "taxa_acerto": round(taxa_acerto, 2),
         "profit_factor": profit_factor,
         "grafico_dados": lista_patrimonio,
-        "lista_trades": lista_trades_recente
+        "lista_trades": lista_trades_recente,
+        "performance_ativos": performance_ativos
     }
