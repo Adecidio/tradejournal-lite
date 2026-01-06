@@ -142,7 +142,7 @@ def salvar_trades_do_excel(filepath, user):
 
 def gerar_dados_dashboard(user, data_inicio=None, data_fim=None):
     # 1. Começamos a query base (ainda não executada)
-    query = user.trades.order_by(Trade.close_time.desc())
+    query = user.trades.order_by(Trade.close_time.asc())
 
     # 2. Aplicamos filtros se o usuário mandou datas
     if data_inicio:
