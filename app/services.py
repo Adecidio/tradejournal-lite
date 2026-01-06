@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from app import db
 from app.models import Trade
+from datetime import datetime
 
 def salvar_trades_do_excel(filepath, user):
     print("--- INICIANDO PROCESSAMENTO (CORREÇÃO POSITION) ---")
@@ -139,8 +140,24 @@ def salvar_trades_do_excel(filepath, user):
         # Retorna dicionário de erro
         return {"erro": str(e)}
 
-def gerar_dados_dashboard(user):
-    trades = user.trades.order_by(Trade.close_time).all()
+def gerar_dados_dashboard(user, data_inicio=None, data_fim=None):
+    # 1. Começamos a query base (ainda não executada)
+    query = user.trades.order_by(Trade.close_time.desc())
+
+    # 2. Aplicamos filtros se o usuário mandou datas
+    if data_inicio:
+        # Filtra trades que fecharam DEPOIS ou da NA data de início
+        query = query.filtter(Trade.close_time >= data_inicio)
+
+    if data_fim:
+        # Filtra trades que fecharam ANTES ou NO FINAL da data de fim
+        # Adicionamos o horário para pegar o dia inteiro
+        data_fim_ajustada = f"{data_fim} 23:59:59"
+        query = query.filter(Trade.close_time <= data_fim_ajustada)
+
+
+    # 3. Executa a busca no banco
+    trades = query.all()
     
     if not trades:
         return {

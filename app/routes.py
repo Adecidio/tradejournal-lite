@@ -60,13 +60,21 @@ def index():
                 os.remove(filepath)
 
             return redirect(url_for('index'))
-        
-    # Lógica de Exibição (GET)
-    # Busca os dados DO BANCO DE DADOS, não importa se acabou de fazer upload ou não
-    dados_dashboard = gerar_dados_dashboard(current_user)
+    
+    # LÓGICA DO GET (FILTROS) ---
+    # Captura os parâmetros da URL (se existirem)
+    data_inicio = request.args.get('data_inicio')
+    data_fim = request.args.get('data_fim')
 
-    return render_template('dashboard.html', dados=dados_dashboard) 
+    # Passa as datas para a função (agora ela aceita esses argumentos)
+    dados_dashboard = gerar_dados_dashboard(current_user, data_inicio, data_fim)
 
+    return render_template('dashboard.html',
+                           dados=dados_dashboard,
+                           # Passamos as datas de volta para o HTML preencher os campos
+                           filtro_inicio=data_inicio,
+                           filtro_fim=data_fim)
+    
 # --- Rota de Login ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
