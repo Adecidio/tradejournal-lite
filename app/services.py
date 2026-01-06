@@ -147,7 +147,7 @@ def gerar_dados_dashboard(user, data_inicio=None, data_fim=None):
     # 2. Aplicamos filtros se o usuário mandou datas
     if data_inicio:
         # Filtra trades que fecharam DEPOIS ou da NA data de início
-        query = query.filtter(Trade.close_time >= data_inicio)
+        query = query.filter(Trade.close_time >= data_inicio)
 
     if data_fim:
         # Filtra trades que fecharam ANTES ou NO FINAL da data de fim
