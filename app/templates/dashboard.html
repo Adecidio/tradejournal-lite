@@ -171,7 +171,7 @@
                 <h5 class="mb-0">Curva de Patrimônio</h5>
             </div>
             <div class="card-body">
-                <canvas id="equityChart" height="100"></canvas>
+                <canvas id="equityChart" height="300"></canvas>
             </div>
         </div>
     </div>
@@ -179,73 +179,101 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Tenta pegar o contexto. Se falhar, para tudo.
-        const canvas = document.getElementById('equityChart');
-        if (!canvas) return;
+    // Configuração do Gráfico de Patrimônio
+    const ctx = document.getElementById('equityChart').getContext('2d');
 
-        const ctx = canvas.getContext('2d');
+    const equityChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            // EIXO X: As datas vindas do Python
+            labels: {{ dados.grafico_labels | tojson }},
 
-        // Recebe os dados do Python (O Jinja2 injeta a lista aqui)
-        const dadosGrafico = {{ dados.grafico_dados | default([]) | tojson | safe }};
+            datasets: [{
+                label : 'Resultado Acumulado',
+                // EIXO Y: Os valores financeiros vindos do Python
+                data: {{ dados.grafico_dados | tojson }},
 
-        console.log("Dados recebidos para o gráfico:", dadosGrafico); // Para debug
+                // Estilo da Linha e Preenchimento
+                borderColor: '#0d6efd',       // Cor da linha (Azul Bootstrap)
+                backgroundColor: 'rgba(13, 110, 253, 0.1)',  // Fundo azul transparente
+                borderWidth: 2,               // Espessura da linha
+                pointRadius: 3,               // Tamanho da bolinha
+                pointHoverRadius: 6,          // Tamanho ao passar o mouse
+                pointBackgroundColor: '#fff', // Cor do miolo da bolinha
+                pointBorderColor: '#0d6efd',  // Borda da bolinha
+                fill: true,                   // Preencher area abaixo da linha
+                tension: 0.1                  // 0 = Reta, 0.4 = Curva suave
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false, // Permite que o gráfico se ajuste à altura do card
 
-        // Se a lista estiver vazia ou inválida, não desenha nada
-        if (!dadosGrafico || dadosGrafico.length === 0) {
-            console.warn("Gráfico vazio: Nenhum dado recebido do Python.");
-        }
-
-        // Cria labels genéricos (Trade 1, Trade 2, etc.)
-        const labels = dadosGrafico.map((val, index) => index === 0 ? 'Início' : `Trade ${index}`);
-
-        // Configura a cor da linha (Verde se lucro, Vermelho se prejuízo)
-        const corLinha = dadosGrafico[dadosGrafico.length -1] >= 0 ? '#198754' : '#dc3545';
-
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Saldo Acumulado (R$)',
-                    data: dadosGrafico,
-                    borderColor: corLinha,
-                    backgroundColor: corLinha + '20',  // Mesma cor mas transparente
-                    fill: true,
-                    tension: 0.3,  // Deixa a linha curva
-                    pointRadius: 3,
-                    pointHoverRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,  // Deixa o gráfico se adaptar melhor à altura
-                plugins: {
-                    legend: { display: false},
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        callbacks: {
-                            label: function(context) {
-                                return 'R$ ' + context.parsed.y.toFixed(2);
+            plugins: {
+                legend: {
+                    display: false   // Esconde a legenda
+                },
+                tooltip: {
+                    // Configuração do "Balãozinho" ao passar o mouse
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: { size: 13 },
+                    bodyFont: { size: 14, weight: 'bold' },
+                    callbacks: {
+                        // Formata o valor para R$ dentro do tooltip
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
                             }
+                            if (context.parsed.y !== null) {
+                                label += new Intl.NumberFormat('pt-BR', {
+                                    style: 'currency',
+                                    currency: 'BRL'
+                                }).format(context.parsed.y);
+                            }
+                            return label;
                         }
                     }
-                },
-                scales: {
-                    x: { display: false }, // Esconde o eixo X
-                    y: {
-                        grid: { color: '#f0f0f0'}
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false,  // Remove grades verticais
+                        drawBorder: false
+                    },
+                    ticks: {
+                        maxTicksLimit: 8,  // LImita quantidade de datas para não encavalar
+                        maxRotation: 0,
+                        autoSkip: true,
+                        font: { size: 11 }
                     }
                 },
-                interaction: {
-                    intersect: false,
-                    mode: 'nearest',
+                y: {
+                    grid: {
+                        color: '#f0f0f0',  // Grade horizontal cinza bem claro
+                        borderDash: [5, 5] // Linha tracejada
+                    },
+                    ticks: {
+                        // Formata os números do eixo Y colocando "R$"
+                        callback: function(value, index, values) {
+                            return new Intl.NumberFormat('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL',
+                                maximumSignificantDigits: 3
+                            }).format(value);
+                        },
+                        font: { size: 11 }
+                    }
                 }
+            },
+            interaction: {
+                mode: 'index',
+                intersect: false,
             }
-        });
+        }
     });
-    
 </script>
 
 <div class="row mt-4">

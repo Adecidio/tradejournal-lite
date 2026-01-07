@@ -215,6 +215,8 @@ def gerar_dados_dashboard(user, data_inicio=None, data_fim=None):
     # Gráfico de Curva de Patrimônio
     lista_patrimonio = df['net_result'].cumsum().tolist()
     lista_patrimonio.insert(0, 0)
+    lista_labels = df['close_time'].dt.strftime('%d/%m %H:%M').tolist()
+    lista_labels.insert(0, 'Início')
     
     # Lista de Trades Detalhada
     df_sorted = df.sort_values(by='close_time', ascending=False)
@@ -229,6 +231,7 @@ def gerar_dados_dashboard(user, data_inicio=None, data_fim=None):
         "taxa_acerto": round(taxa_acerto, 2),
         "profit_factor": profit_factor,
         "grafico_dados": lista_patrimonio,
+        "grafico_labels": lista_labels,
         "lista_trades": lista_trades_recente,
         "performance_ativos": performance_ativos
     }
