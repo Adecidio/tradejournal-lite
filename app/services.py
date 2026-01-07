@@ -225,10 +225,7 @@ def gerar_dados_dashboard(user, data_inicio=None, data_fim=None):
     # --- PERFORMANCE POR ATIVO ---
     # Agrupa pelo símbolo e soma o resultado financeiro
     # Reset index transforma o agrupamento de volta em colunas normais
-    df_ativos = df.groupby('symbol')['net_result'].sum().reset_index()
-
-    # Ordena do maior lucro para o menor (ou maior prejuízo)
-    df_ativos = df_ativos.sort_values(by='net_result', ascending=False)
+    df_ativos = df.groupby('symbol')['net_result'].sum().reset_index().sort_values(by='net_result', ascending=False)
 
     # Converte para lista de dicionários para o HTML ler
     performance_ativos = df_ativos.to_dict('records')
