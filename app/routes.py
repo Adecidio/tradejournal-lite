@@ -186,7 +186,7 @@ def virar_pro():
     flash('Parabéns! Você agora é um usuário PRO 👑', 'success')
     return redirect(url_for('index'))
 
-@app.route('virar-free')
+@app.route('/virar-free')
 @login_required
 def virar_free():
     # Simula o cancelamento ou expiração
