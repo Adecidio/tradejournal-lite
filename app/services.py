@@ -201,6 +201,27 @@ def gerar_dados_dashboard(user, data_inicio=None, data_fim=None):
         taxa_acerto = 0
         profit_factor = 0
 
+    # --- CÁLCULO DE SEQUÊNCIAS (STREAKS) ---
+    # Truque do Pandas:
+    # 1. Cria booleano (Ganho = True, Perda = Flase)
+    # 2. Compara com a linha anterior (.shift). Se mudou, soma 1 no acumulado.
+    # 3. Isso cria um ID único para cada "bloco" consecutivo.
+
+    sinal = df['net_result'] > 0
+    grupos_consecutivos = (sinal != sinal.shift()).cumsum()
+
+    # Soma o dinheiro dentro de cada grupo consecutivo
+    soma_sequencias = df.groupby(grupos_consecutivos)['net_result'].sum()
+
+    # Pega o maior valor positivo e o menor valor negativo (maior prejuízo)
+    seq_ganho = soma_sequencias[soma_sequencias > 0].max()
+    seq_perda = soma_sequencias[soma_sequencias < 0].min()
+
+    # Tratamento caso não existam sequências (NaN vira 0)
+    seq_ganho = 0 if pd.isna(seq_ganho) else seq_ganho
+    seq_perda = 0 if pd.isna(seq_perda) else seq_perda
+
+
     # --- PERFORMANCE POR ATIVO ---
     # Agrupa pelo símbolo e soma o resultado financeiro
     # Reset index transforma o agrupamento de volta em colunas normais
