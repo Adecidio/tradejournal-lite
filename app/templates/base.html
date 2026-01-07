@@ -33,6 +33,12 @@
                             <li class="nav-item ms-3">
                                 <span class="navbar-text text-white-50">
                                     Olá, {{ current_user.username }}
+
+                                    {% if current_user.plan_type == 'pro' %}
+                                        <span class="badge bg-warning text-dark ms-1">PRO 👑</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary ms-1">FREE</span>
+                                    {% endif %}
                                 </span>
                             </li>
                             <li class="nav-item ms-3">

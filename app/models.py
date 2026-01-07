@@ -11,6 +11,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(64), index=True, unique=True) # Nome de usuário
     email = db.Column(db.String(120), index=True, unique=True)  #E-mail único
     password_hash = db.Column(db.String(256))  # Senha (nunca salvamos texto puro, salvamos hash!)
+    plan_type = db.Column(db.String(20), default='free')
     is_premium = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -23,7 +24,7 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
     
     def __repr__(self):
-        return f'<User {self.username}>'
+        return f'<User {self.username} - Plano: {self.plan_type}>'
     
 # --- NOVA TABELA: TRADES ---
 class Trade(db.Model):

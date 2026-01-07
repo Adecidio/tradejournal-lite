@@ -176,3 +176,21 @@ def limpar_dados():
         print(f"Erro ao deletar: {e}")
 
     return redirect(url_for('index'))
+
+@app.route('/virar-pro')
+@login_required
+def virar_pro():
+    # Simula o pagamento aprovado
+    current_user.plan_type = 'pro'
+    db.session.commit()
+    flash('Parabéns! Você agora é um usuário PRO 👑', 'success')
+    return redirect(url_for('index'))
+
+@app.route('virar-free')
+@login_required
+def virar_free():
+    # Simula o cancelamento ou expiração
+    current_user.plan_type = 'free'
+    db.session.commit()
+    flash('Você voltou para o plano FREE.', 'info')
+    return redirect(url_for('index'))
