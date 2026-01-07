@@ -326,12 +326,26 @@
 </div>
 
     {% if current_user.is_premium %}
-    <div class="row mt-4 mb-4">
-        <div class="col-md-6">
-            <div class="alert alert-success">Maior Ganho: R$ {{ dados.maior_ganho }} 🤑</div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center h-100">
+            <div class="card-body">
+                <h6 class="text-muted">Sequência Vencedora 🚀</h6>
+                <h3 class="text-success fw-bold">
+                    R$ {{ dados.seq_ganho }}
+                </h3>
+                <small class="text-muted">Maior acúmulo consecutivo</small>
+            </div>
         </div>
-        <div class="col-md-6">
-            <div class="alert alert-danger">Maior Perda: R$ {{ dados.maior_perda }}🔻</div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center h-100">
+            <div class="card-body">
+                <h6 class="text-muted">Maior Drawdown 📉</h6>
+                <h3 class="text-danger fw-bold">
+                    R$ {{ dados.seq_perda }}
+                </h3>
+                <small class="text-muted">Pior sequência negativa</small>
+            </div>
         </div>
     </div>
     {% else %}
