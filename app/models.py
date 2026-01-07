@@ -8,15 +8,14 @@ class User(UserMixin, db.Model):
     __tablename__ = 'users'
     # As colunas da tabela no banco de dados
     id = db.Column(db.Integer, primary_key=True) # Identidade única (CPF do banco)
-    username = db.Column(db.String(64), index=True, unique=True) # Nome de usuário
-    email = db.Column(db.String(120), index=True, unique=True)  #E-mail único
+    username = db.Column(db.String(64), index=True, unique=True, nullable=False) # Nome de usuário
+    email = db.Column(db.String(120), index=True, unique=True, nullable=False)  #E-mail único
     password_hash = db.Column(db.String(256))  # Senha (nunca salvamos texto puro, salvamos hash!)
     plan_type = db.Column(db.String(20), default='free')
-    is_premium = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # RELACIONAMENTO: Um usuário tem MUITOS trades
-    trades = db.relationship('Trade', backref='author', lazy='dynamic')
+    trades = db.relationship('Trade', backref='owner', lazy='True')
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
