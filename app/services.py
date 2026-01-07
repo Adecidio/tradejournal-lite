@@ -141,7 +141,7 @@ def salvar_trades_do_excel(filepath, user):
         return {"erro": str(e)}
 
 def gerar_dados_dashboard(user, data_inicio=None, data_fim=None):
-    # 1. Começamos a query base (ainda não executada)
+    # 1. Começamos a query base (Ordem ascendente)
     query = user.trades.order_by(Trade.close_time.asc())
 
     # 2. Aplicamos filtros se o usuário mandou datas
@@ -159,13 +159,18 @@ def gerar_dados_dashboard(user, data_inicio=None, data_fim=None):
     # 3. Executa a busca no banco
     trades = query.all()
     
-    if not trades:
-        return {
-            "total_trades": 0, "resultado_financeiro": 0, "maior_ganho": 0,
-            "maior_perda": 0, "taxa_acerto": 0, "profit_factor": 0,
-            "grafico_dados": [], "lista_trades": [], "performance_ativos": []
-        }
+    resumo_vazio = {
+        "total_trades": 0, "resultado_financeiro": 0,
+        "seq_ganho": 0, "seq_perda": 0,
+        "taxa_acerto": 0, "profit_factor": 0,
+        "grafico_dados": [],
+        "grafico_labels": [],
+        "lista_trades": [],
+    }
 
+    if not trades:
+        return resumo_vazio
+    
     dados_lista = []
     for t in trades:
         dados_lista.append({
@@ -181,14 +186,13 @@ def gerar_dados_dashboard(user, data_inicio=None, data_fim=None):
     
     df = pd.DataFrame(dados_lista)
     
+    # Garante que close_time é data
     if 'close_time' in df.columns:
         df['close_time'] = pd.to_datetime(df['close_time']).fillna(pd.Timestamp('1970-01-01'))
     
-    # --- CÁLCULOS GERAIS
+    # --- CÁLCULOS FINANCEIROS BÁSICOS
     total_trades = len(df)
     resultado_financeiro = df['net_result'].sum()
-    maior_lucro = df['net_result'].max()
-    maior_perjuizo = df['net_result'].min()
     
     if total_trades > 0:
         trades_vencedores = len(df[df['net_result'] > 0])
@@ -244,8 +248,8 @@ def gerar_dados_dashboard(user, data_inicio=None, data_fim=None):
         "sucesso": True,
         "total_trades": int(total_trades),
         "resultado_financeiro": round(resultado_financeiro, 2),
-        "maior_ganho": round(maior_lucro, 2),
-        "maior_perda": round(maior_perjuizo, 2),
+        "seq_ganho": round(seq_ganho, 2),
+        "seq_perda": round(seq_perda, 2),
         "taxa_acerto": round(taxa_acerto, 2),
         "profit_factor": profit_factor,
         "grafico_dados": lista_patrimonio,
