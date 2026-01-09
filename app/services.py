@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from app import db
 from app.models import Trade
-from datetime import datetime
+from datetime import datetime, timedelta
 
 def salvar_trades_do_excel(filepath, user):
     print("--- INICIANDO PROCESSAMENTO (CORREÇÃO POSITION) ---")
@@ -144,6 +144,19 @@ def gerar_dados_dashboard(user, data_inicio=None, data_fim=None):
     # 1. Começamos a query base (Ordem ascendente)
     query = Trade.query.filter_by(user_id=user.id).order_by(Trade.close_time.asc())
 
+    # --- TRAVA DO USUÁRIO FREE ---
+    limitacao_aplicada = False  # Variável para avisar o frontend depois
+
+    if user.plan_type == 'free':
+        # Calcula a data de 30 dias atrás
+        data_limite = datetime.now() - timedelta(days=30)
+
+        # Força o filtro: Só trades que fecarem DEPOIS dessa data
+        query = query.filter(Trade.close_time >= data_limite)
+        limitacao_aplicada = True
+
+    # ---------------------------------
+
     # 2. Aplicamos filtros se o usuário mandou datas
     if data_inicio:
         # Filtra trades que fecharam DEPOIS ou da NA data de início
@@ -166,6 +179,7 @@ def gerar_dados_dashboard(user, data_inicio=None, data_fim=None):
         "grafico_dados": [],
         "grafico_labels": [],
         "lista_trades": [],
+        "limitacao_aplicada": limitacao_aplicada,
     }
 
     if not trades:
@@ -255,5 +269,6 @@ def gerar_dados_dashboard(user, data_inicio=None, data_fim=None):
         "grafico_dados": lista_patrimonio,
         "grafico_labels": lista_labels,
         "lista_trades": lista_trades_recente,
-        "performance_ativos": performance_ativos
+        "performance_ativos": performance_ativos,
+        "limitacao_aplicada": limitacao_aplicada
     }

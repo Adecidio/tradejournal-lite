@@ -89,6 +89,23 @@
         </div>
     </div>
 </div>
+
+{% if dados.limitacao_aplicada %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center justify-content-between" role="alert">
+            <div>
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <strong>Histórico Limitado:</strong> Como usuário <strong>FREE</strong>, você está visualizando apenas os últimos 30 dias.
+            </div>
+            <a href="{{ url_for('virar_pro') }}" class="btn btn-warning btn-sm fw-bold text-dark">
+                Desbloquear Histórico Completo 👑
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="row text-center">
     <div class="col-md-4 mb-3">
         <div class="card shadow border-0">
@@ -325,45 +342,29 @@
     </div>
 </div>
 
-    {% if current_user.is_premium %}
-    <div class="row mt-4 mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm text-center h-100">
-                <div class="card-body">
-                    <h6 class="text-muted mb-2">Sequência Vencedora 🚀</h6>
-                    <h3 class="text-success fw-bold">
-                        R$ {{ dados.seq_ganho }}
-                    </h3>
-                    <small class="text-muted">Maior acúmulo consecutivo</small>
-                </div>
+<div class="row mt-4 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center h-100">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Sequência Vencedora 🚀</h6>
+                <h3 class="text-success fw-bold">
+                    R$ {{ dados.seq_ganho }}
+                </h3>
+                <small class="text-muted">Maior acúmulo consecutivo</small>
+            </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm text-center h-100">
-                <div class="card-body">
-                    <h6 class="text-muted mb-2">Maior Drawdown 📉</h6>
-                    <h3 class="text-danger fw-bold">
-                        R$ {{ dados.seq_perda }}
-                    </h3>
-                    <small class="text-muted">Pior sequência negativa</small>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    {% else %}
-    <div class="row mt-4 mb-4">
-        <div class="col-12">
-            <div class="card border-warnig text-center p-4" style="background-color: #fff3cd;">
-                <h3>🔒 Conteúdo Exclusivo Premium</h3>
-                <p>Usuários Free não veem os dados de Risco (Maior Ganho/Perda).</p>
-                <a href="{{ url_for('pricing') }}" class="btn btn-warning btn-lg">
-                    👑 Virar Premium por R$ 9,90
-                </a>
-
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center h-100">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">Maior Drawdown 📉</h6>
+                <h3 class="text-danger fw-bold">
+                    R$ {{ dados.seq_perda }}
+                </h3>
+                <small class="text-muted">Pior sequência negativa</small>
             </div>
         </div>
     </div>
-    {% endif %}
 </div>
+      
 {% endblock %}
