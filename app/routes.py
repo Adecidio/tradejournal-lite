@@ -194,3 +194,21 @@ def virar_free():
     db.session.commit()
     flash('Você voltou para o plano FREE.', 'info')
     return redirect(url_for('index'))
+
+@app.route('/salvar-anotacao', methods=['POST'])
+@login_required
+def salvar_anotacao():
+    trade_id = request.form.get('trade_id')
+    nota = request.form.get('nota')
+
+    # Busca o trade e garante que pertence ao usuário logado
+    trade = Trade.query.filter_by(id=trade_id, user_id=current_user.id).first()
+
+    if trade:
+        trade.user_note = nota
+        db.session.commit()
+        flash('Anotação salva com sucesso! 📝', 'success')
+    else:
+        flash('Erro ao salvar anotação.', 'danger')
+
+    return redirect(url_for('index'))

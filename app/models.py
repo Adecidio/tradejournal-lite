@@ -25,14 +25,14 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return f'<User {self.username} - Plano: {self.plan_type}>'
     
-# --- NOVA TABELA: TRADES ---
+# --- TABELA DE TRADES ---
 class Trade(db.Model):
     __tablename__ = 'trades'
 
     id = db.Column(db.Integer, primary_key=True)
 
     # Chave Estrangeira: Este trade pertence a qual usuário?
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
     # Dados do Excel
     ticket = db.Column(db.String(32), index=True)
@@ -54,7 +54,8 @@ class Trade(db.Model):
     profit = db.Column(db.Float, default=0.0)
 
     net_result = db.Column(db.Float, default=0.0)
-
+    # Text permite textos longos (anotações detalhadas)
+    user_note = db.Column(db.Text, nullable=True)
     # Resultado calculado (Profit + Swap + Commission)
 
     def __repr__(self):

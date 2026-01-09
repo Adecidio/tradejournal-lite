@@ -188,7 +188,9 @@ def gerar_dados_dashboard(user, data_inicio=None, data_fim=None):
     dados_lista = []
     for t in trades:
         dados_lista.append({
+            'id': t.id,
             'ticket': t.ticket,
+            'user_note': t.user_note,
             'symbol': t.symbol,
             'type': t.type,
             'volume': t.volume,

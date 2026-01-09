@@ -297,7 +297,7 @@
     <div class="col-12">
         <div class="card shadow border-0 mb-5">
             <div class="card-header bg-white border-0">
-                <h5 class="mb-0">Extrato das Operações</h5>
+                <h4 class="mb-0 text-center">Extrato das Operações</h4>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -315,7 +315,46 @@
                     <tbody>
                         {% for trade in dados.lista_trades %}
                         <tr>
-                            <td><small class="text-muted">#{{  trade.ticket }}</small></td>
+                            <td>
+                                <a href="#" class="text-decoration-none fw-bold"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalNota{{ loop.index }}"
+                                title="Clique para editar">
+                                    {{ trade.ticket }}
+                                    {% if trade.user_note %} 📝 {% endif %}
+                                </a>
+
+                                <div class="modal fade" id="modalNota{{ loop.index }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Trade #{{ trade.ticket }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <form action="{{ url_for('salvar_anotacao') }}" method="post">
+                                                <div class="modal-body">
+
+                                                    <input type="hidden" name="trade_id" value="{{ trade.id }}"><div class="mb-3">
+                                                        <label class="form-label fw-bold">Resultado:</label>
+                                                        <span class="{{ 'text-success' if trade.net_result >= 0 else 'text-danger' }} fw-bold"></span>>
+                                                           R$ {{ trade.net_result }} 
+                                                        </span>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label for="nota" class="form-label">Suas Anotações:</label>
+                                                        <textarea class="form-control" name="nota" rows="5" placeholder="O que você pensou ao abrir essa ordem?">{{ trade.user_note if trade.user_note else '' }}</textarea>
+                                                    </div>
+
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                    <button type="submit" class="btn btn-primary">Salvar Anotação</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
                             <td><strong>{{  trade.symbol }}</strong></td>
 
                             <td>
