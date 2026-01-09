@@ -56,8 +56,10 @@ class Trade(db.Model):
     net_result = db.Column(db.Float, default=0.0)
     # Text permite textos longos (anotações detalhadas)
     user_note = db.Column(db.Text, nullable=True)
-    # Resultado calculado (Profit + Swap + Commission)
 
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    # Resultado calculado (Profit + Swap + Commission)
     def __repr__(self):
         return f'<Trade {self.ticket} do User {self.user_id}>'
     
