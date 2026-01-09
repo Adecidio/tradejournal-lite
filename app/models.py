@@ -31,9 +31,7 @@ class Trade(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    # Chave Estrangeira: Este trade pertence a qual usuário?
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-
+    
     # Dados do Excel
     ticket = db.Column(db.String(32), index=True)
     symbol = db.Column(db.String(20))
@@ -57,8 +55,9 @@ class Trade(db.Model):
     # Text permite textos longos (anotações detalhadas)
     user_note = db.Column(db.Text, nullable=True)
 
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    
+    # Chave Estrangeira: Este trade pertence a qual usuário?
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
     # Resultado calculado (Profit + Swap + Commission)
     def __repr__(self):
         return f'<Trade {self.ticket} do User {self.user_id}>'
