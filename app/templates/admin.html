@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>👮‍♂️ Painel Administrativo</h2>
+        <span class="badge bg-dark">Ativado</span>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body text-center">
+                    <h3>{{ total_users }}</h3>
+                    <small>Total de Usuários</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-dark h-100">
+                <div class="card-bod text-center">
+                    <h3>{{ total_pro }}</h3>
+                    <small>Assinantes PRO 👑</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body text-center">
+                    <h3>{{ total_trades }}</h3>
+                    <small>Trades Processados</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Lista de Clientes</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Usuário</th>
+                        <th>Plano atual</th>
+                        <th>Admin?</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user is users %}
+                    <tr>
+                        <td>#{{ user.id }}</td>
+                        <td class="fw-bold">{{ user.username }}</td>
+                        <td>
+                            {% if user.plan_type == 'pro' %}
+                                <span class="badge bg-warning text-dark">PRO</span>
+                            {% else %}
+                                <span class="badge bg-secondary">FREE</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.is_admin %}
+                                <span class="text-success fw-bold">SIM</span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if not user.is_admin %}
+                                {% if user.plan_type == 'free' %}
+                                    <a href="{{ url_for('admin_upgrade', user_id=user.id) }}" class="btn btn-sm btn-outline-success" title="Dar Upgrade">
+                                        Promover 🔼
+                                    </a>
+                                {% else %}
+                                    <a href="{{ url_for('admin_downgrade', user_id=user.id) }}" class="btn btn-sm btn-outline-danger" title="Tirar Plano">
+                                        Rebaixar 🔽
+                                    </a>
+                                {% endif %}
+                            {% else %}
+                                <small class="text-muted me-2">O Chefe</small>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

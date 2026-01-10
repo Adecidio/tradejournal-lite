@@ -13,7 +13,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(256))  # Senha (nunca salvamos texto puro, salvamos hash!)
     plan_type = db.Column(db.String(20), default='free')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
+    is_admin = db.Column(db.Boolean, default=False)
     # RELACIONAMENTO: Um usuário tem MUITOS trades
     trades = db.relationship('Trade', backref='owner', lazy=True)
     def set_password(self, password):
@@ -65,3 +65,4 @@ class Trade(db.Model):
     @login.user_loader
     def load_user(id):
         return User.query.get(int(id))
+

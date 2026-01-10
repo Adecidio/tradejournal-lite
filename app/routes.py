@@ -18,13 +18,20 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # --- ROTA TEMPORÁRIA ---
 @app.route('/reset-banco-completo')
 def reset_banco():
-    try:
-        db.drop_all()
-        db.create_all()
-        return "<h1>Sucesso!</h1> <p>Banco resetado. Tabela antiga 'user' removida e tabela nova 'users' criada.</p>"
-    except Exception as e:
-        return f"<h1>Erro:</h1> <p>{str(e)}</p>"
-    
+    db.drop_all()
+    db.create_all()
+
+    # --- CRIA O ADMIN PADRÃO ---
+    from werkzeug.security import generate_password_hash
+    senha_hash = generate_password_hash('214365')
+
+    admin_user = User(username='Adecidio@San', password=senha_hash, plan_type='pro', is_admin=True)
+    db.session.add(admin_user)
+    db.session.commit()
+
+    return "Banco resetado e Usuário Admin criado!"
+
+
 # --- Função Auxiliar para o Flask-Login saber quem é quem ---
 @login.user_loader
 def load_user(id):
@@ -197,3 +204,55 @@ def salvar_anotacao():
 def planos():
     # Renderiza a página de vendas
     return render_template('plans.html')
+
+@app.route('/admin')
+@login_required
+def admin_panel():
+    # SEGURANÇA: Se não for admin, expulsa!
+    if not current_user.is_admin:
+        flash('Acesso negado! Área restrita para administradores.', 'danger')
+        return redirect(url_for('index'))
+    
+    # Busca TODOS os usuários dos sistema
+    users = User.query.all()
+
+    # Estatísticas
+    total_users = len(users)
+    total_pro = User.query.filter_by(plan_type='pro').count()
+    total_trades = Trade.query.count()
+
+    return render_template('admin.html',
+                           users=users,
+                           total_users=total_users,
+                           total_pro=total_pro,
+                           total_trades=total_trades)
+
+# Rota para dar upgrade manual num usuário
+@app.route('/admin/upgrade/<int:user_id>')
+@login_required
+def admin_upgrade(user_id):
+    if not current_user.is_admin:
+        return redirect(url_for('index'))
+    
+    user = User.query.get(user_id)
+    if user:
+        user.plan_type = 'pro'
+        db.session.commit()
+        flash(f'Usuário {user.username} promovido para PRO!', 'success')
+
+    return redirect(url_for('admin_panel'))
+
+# Rota para rebaixar usuário
+@app.route('/admin/downgrade/<int:user_id>')
+@login_required
+def admin_downgrade(user_id):
+    if not current_user.is_admin:
+        return redirect(url_for('index'))
+    
+    user = User.query.get(user_id)
+    if user:
+        user.plan_type = 'free'
+        db.session.commit()
+        flash(f'Usuário {user.username} rebaixado para FREE.', 'warning')
+
+    return redirect(url_for('admin_panel'))
