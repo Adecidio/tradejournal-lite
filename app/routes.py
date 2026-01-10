@@ -25,7 +25,12 @@ def reset_banco():
     from werkzeug.security import generate_password_hash
     senha_hash = generate_password_hash('214365')
 
-    admin_user = User(username='adecidiosan', password=senha_hash, plan_type='pro', is_admin=True)
+    admin_user = User(
+        username='adecidiosan', 
+        password_hash=senha_hash, 
+        plan_type='pro', 
+        is_admin=True
+    )
     db.session.add(admin_user)
     db.session.commit()
 
