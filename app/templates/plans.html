@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="pricing-header p-3 pb-md-4 mx-auto text-center">
+    <h1 class="display-4 fw-normal text-primary">Escolha seu Plano</h1>
+    <p class="fs-5">Evolua de amador para profissional com as ferramentas certas de análise.</p>
+</div>
+
+<div class="row row-cols-1 row-cols-md-3 mb-3 text-center justify-content-center">
+
+    <div class="col">
+        <div class="card mb-4 rounded-3 shadow-sm">
+            <div class="card-header py-3">
+                <h4 class="my-0 fw-normal">Iniciante</h4>
+            </div>
+            <div class="card-body">
+                <h1 class="card-title pricing-card-title">R$ 0<small class="text-muted fw-light>">/mês</small></h1>
+                <ul class="list-unstyled mt-3 mb-4">
+                    <li>✅ Upload de planilhas</li>
+                    <li>✅ Gráfico de Patrimônio</li>
+                    <li>⚠️ <strong>Histórico limitado a 30 dias</strong></li>
+                    <li>❌ Suporte Prioritário</li>
+                </ul>
+
+                {% if currernt_user.is_authenticated and current_user.plan_type == 'free' %}
+                    <button type="button" class="btn btn-lg btn-outline-primary w-100" disabled>Seu plano atual</button>
+                {% elif current_user.is_authenticated and current_user.plan_type == 'pro' %}
+                    <a href="{{ url_for('virar_free') }}" class="btn btn-lg btn-outline-danger w-100">Cancelar Assinatura</a>
+                {% else %}
+                    <a href="{{ url_for('register') }}" class="btn btn-lg btn-outline-primary w-100">Criar conta grátis</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="card mb-4 rounded-3 shadow border-primary">
+            <div class="card-header py-3 text-white bg-primary border-primary">
+                <h4 class="my-0 fw-normal">Trader Pro 👑</h4>
+            </div>
+            <div class="card-body">
+                <h1 class="card-title">R$ 29<small class="text-muted fw-light">/mês</small></h1>
+                <ul class="list-unstyled mt-3 mb-4">
+                    <li>✅ <strong>Histórico ILIMITADO</strong></li>
+                    <li>✅ Diário de Trades (Journaling)</li>
+                    <li>✅ Análise de Sequências e Drawdown</li>
+                    <li>✅ Acesso a futuras atualiazações</li>
+                </ul>
+                {% if current_user.is_authenticated and current_user.plan_type == 'pro' %}
+                    <button type="button" class="btn btn-lg btn-success w-100" disabled>Assinatura Ativa</button>
+                {% else %}
+                    <a href="{{ url_for('virar_pro') }}" class="btn btn-lg btn-primary w-100">
+                        Assinar Agora 🚀
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

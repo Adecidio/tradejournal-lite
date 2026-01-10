@@ -139,26 +139,6 @@ def register():
 def pricing():
     return render_template('pricing.html')
 
-# --- Rota que SIMULA o Pagamento ---
-@app.route('/fake_checkout')
-@login_required
-def fake_checkout():
-    """
-    Simula o fluxo de pagamento.
-    """
-    # 1. Simula o processamento do cartão... (fingindo demora)
-    # ... processando ...
-
-    # 2. Pagamento Aprovado! Vamos promover o usuário.
-    current_user.is_premium = True
-
-    # 3. Salva a alteração no banco de dados
-    db.session.commit()
-
-    # 4. Feedback para o usuário
-    flash('Pagamento confirmado! Bem-vindo ao time Premium 🚀', 'success')
-    return redirect(url_for('index'))
-
 @app.route('/limpar-dados', methods=['POST'])
 @login_required
 def limpar_dados():
@@ -212,3 +192,8 @@ def salvar_anotacao():
         flash('Erro ao salvar anotação.', 'danger')
 
     return redirect(url_for('index'))
+
+@app.route('/planos')
+def planos():
+    # Renderiza a página de vendas
+    return render_template('plans.html')
