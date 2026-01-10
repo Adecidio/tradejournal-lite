@@ -26,7 +26,8 @@ def reset_banco():
     senha_hash = generate_password_hash('214365')
 
     admin_user = User(
-        username='adecidiosan', 
+        username='adecidiosan',
+        email='adecidio42@gmail.com',
         password_hash=senha_hash, 
         plan_type='pro', 
         is_admin=True
