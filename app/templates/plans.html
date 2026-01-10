@@ -22,7 +22,7 @@
                     <li>❌ Suporte Prioritário</li>
                 </ul>
 
-                {% if currernt_user.is_authenticated and current_user.plan_type == 'free' %}
+                {% if current_user.is_authenticated and current_user.plan_type == 'free' %}
                     <button type="button" class="btn btn-lg btn-outline-primary w-100" disabled>Seu plano atual</button>
                 {% elif current_user.is_authenticated and current_user.plan_type == 'pro' %}
                     <a href="{{ url_for('virar_free') }}" class="btn btn-lg btn-outline-danger w-100">Cancelar Assinatura</a>
