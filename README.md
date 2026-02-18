@@ -74,3 +74,5 @@ Experiência do Usuário (UX):
 Landing Page de alta conversão com gráficos animados em tempo real.
 
 Dashboards intuitivos com feedback visual imediato (cores verde/vermelho para lucro/prejuízo).
+
+Demo (Render): https://tradejournal-lite.onrender.com/
