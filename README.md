@@ -1,4 +1,5 @@
 🚀 Projeto: TradeJournal (Micro-SaaS)
+
 🎯 1. O Objetivo (A Dor e a Solução)
 O desenvolvimento do TradeJournal nasceu da necessidade de resolver um problema real de traders: a dificuldade de analisar performance de forma rápida e visual.
 A maioria dos traders perde tempo preenchendo planilhas manuais ou operando "no escuro".
