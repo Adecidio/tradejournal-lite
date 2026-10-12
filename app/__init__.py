@@ -46,7 +46,7 @@ login.login_view = 'login' # Se alguém tentar acessar página restrita, vem pra
 # Importa os modelos antes de criar as tabelas para que o SQLAlchemy conheça todas as classes
 from app import models
 
-#with app.app_context():
+# with app.app_context():
 #    db.create_all()
 
 # Importa as rotas (atenção: deve ser importado DEPOIS de criar o app para evitar erro circular)

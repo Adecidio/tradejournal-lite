@@ -15,27 +15,31 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# --- ROTA TEMPORÁRIA ---
-@app.route('/reset-banco-completo')
-def reset_banco():
-    db.drop_all()
+# --- ROTA DE INICIALIZAÇÃO SEGURA ---
+@app.route('/setup-inicial')
+def setup_inicial():
+    # Cria apenas as tabelas que ainda não existem (preserva os dados salvos)
     db.create_all()
 
-    # --- CRIA O ADMIN PADRÃO ---
-    from werkzeug.security import generate_password_hash
-    senha_hash = generate_password_hash('214365')
+    # Verifica se o admin já existe para evitar duplicata ou erro
+    admin_existente = User.query.filter_by(username='adecidiosan').first()
+    
+    if not admin_existente:
+        from werkzeug.security import generate_password_hash
+        senha_hash = generate_password_hash('214365')
 
-    admin_user = User(
-        username='adecidiosan',
-        email='adecidio42@gmail.com',
-        password_hash=senha_hash, 
-        plan_type='pro', 
-        is_admin=True
-    )
-    db.session.add(admin_user)
-    db.session.commit()
-
-    return "Banco resetado e Usuário Admin criado!"
+        admin_user = User(
+            username='adecidiosan',
+            email='adecidio42@gmail.com',
+            password_hash=senha_hash, 
+            plan_type='pro', 
+            is_admin=True
+        )
+        db.session.add(admin_user)
+        db.session.commit()
+        return "Banco inicializado e Usuário Admin criado com sucesso!"
+    
+    return "O banco já possui tabelas e o admin já está cadastrado."
 
 
 # --- Função Auxiliar para o Flask-Login saber quem é quem ---
