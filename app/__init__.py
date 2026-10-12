@@ -25,7 +25,7 @@ if database_url:
     parsed = urlsplit(database_url)
     if parsed.scheme in {'postgresql', 'postgres'}:
         query = dict(parse_qsl(parsed.query, keep_blank_values=True))
-        if 'sslmode' not in query and 'render.com' in parsed.netloc:
+        if 'sslmode' not in query:
             query['sslmode'] = 'require'
         if query:
             database_url = parsed._replace(query=urlencode(query, doseq=True)).geturl()
@@ -47,7 +47,10 @@ login.login_view = 'login' # Se alguém tentar acessar página restrita, vem pra
 from app import models
 
 with app.app_context():
-    db.create_all()
+    try:
+        db.create_all()
+    except Exception as exc:
+        app.logger.warning('Banco de dados indisponível no boot: %s', exc)
 
 # Importa as rotas (atenção: deve ser importado DEPOIS de criar o app para evitar erro circular)
 from app import routes
