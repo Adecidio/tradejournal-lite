@@ -14,6 +14,8 @@ class User(UserMixin, db.Model):
     plan_type = db.Column(db.String(20), default='free')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_admin = db.Column(db.Boolean, default=False)
+    reset_code = db.Column(db.String(6), nullable=True)  # Código de redefinição de senha
+    reset_code_expiration = db.Column(db.DateTime, nullable=True)  # Expiração do código de redefinição
     # RELACIONAMENTO: Um usuário tem MUITOS trades
     trades = db.relationship('Trade', backref='owner', lazy=True)
     def set_password(self, password):
@@ -24,6 +26,7 @@ class User(UserMixin, db.Model):
     
     def __repr__(self):
         return f'<User {self.username} - Plano: {self.plan_type}>'
+
     
 # --- TABELA DE TRADES ---
 class Trade(db.Model):

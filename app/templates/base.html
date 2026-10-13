@@ -34,6 +34,12 @@
                     <ul class="navbar-nav ms-auto align-items-center">
                     
                         {% if current_user.is_authenticated %}
+                            {% if current_user.is_admin %}
+                                <li class="nav-item me-2">
+                                    <a class="btn btn-outline-warning btn-sm" href="{{ url_for('admin_painel') }}">Painel Admin ⚙️</a>
+                                </li>
+                            {% endif %}
+
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('planos') }}">Seja PRO</a>
                             </li>
@@ -46,6 +52,7 @@
                                     {% else %}
                                         <span class="badge bg-secondary ms-1">FREE</span>
                                     {% endif %}
+
                                 </span>
                             </li>
                             <li class="nav-item ms-3">
@@ -53,6 +60,7 @@
                             </li>
 
                         {% else %}
+
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('login') }}">Entrar</a>
                             </li>

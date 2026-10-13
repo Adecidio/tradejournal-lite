@@ -1,8 +1,11 @@
 import os
+import random
+from datetime import datetime, timedelta, timezone
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import current_user, login_user, logout_user, login_required
+from flask_mail import Message
 from werkzeug.security import generate_password_hash, check_password_hash
-from app import app, db, login
+from app import app, db, login, mail
 from app.models import User, Trade
 from app.services import salvar_trades_do_excel, gerar_dados_dashboard
 
@@ -89,6 +92,69 @@ def login():
         return redirect(url_for('index'))
 
     return render_template('login.html')
+
+@app.route('/esqueci-senha', methods=['GET', 'POST'])
+def esqueci_senha():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        user = User.query.filter_by(email=email).first()
+        
+        if user:
+            # Gera um código aleatório de 6 dígitos
+            code = f"{random.randint(0, 999999):06d}"
+            user.reset_code = code
+            user.reset_code_expiration = datetime.now(timezone.utc) + timedelta(minutes=15)
+            db.session.commit()
+            
+            msg = Message('Código de Recuperação de Senha - TradeJournal',
+              recipients=[user.email])
+            msg.body = f'Olá {user.username},\n\nSeu código para redefinir a senha é: {code}\nEste código expira em 15 minutos.'
+            mail.send(msg)
+            
+            flash('Código de verificação gerado! (Verifique o terminal do VS Code para testes locais).', 'success')
+            return redirect(url_for('verificar_codigo', email=user.email))
+        else:
+            flash('E-mail não encontrado no sistema.', 'danger')
+            
+    return render_template('esqueci_senha.html')
+
+@app.route('/verificar-codigo', methods=['GET', 'POST'])
+def verificar_codigo():
+    email = request.args.get('email') or request.form.get('email')  # Captura o e-mail do formulário ou da query string
+    if request.method == 'POST':
+        entered_code = request.form.get('code')
+        user = User.query.filter_by(email=email).first()
+
+        now = datetime.now(timezone.utc)
+        # Verifica se o código é válido e não expirou
+        if user and user.reset_code == entered_code and user.reset_code_expiration.replace(tzinfo=timezone.utc) > now:
+            flash('Código verificado! Agora você pode redefinir sua senha.', 'success')
+            return redirect(url_for('nova_senha', email=email))
+        else:
+            flash('Código inválido ou expirado.', 'danger')
+
+        return redirect(url_for('verificar_codigo'))
+
+    return render_template('verificar_codigo.html', email=email)
+
+@app.route('/nova-senha', methods=['GET', 'POST'])
+def nova_senha():
+    email = request.args.get('email') or request.form.get('email')  # Captura o e-mail do formulário ou da query string
+    if request.method == 'POST':
+        new_password = request.form.get('password')
+        user = User.query.filter_by(email=email).first()
+
+        if user:
+            user.password_hash = generate_password_hash(new_password)
+            user.reset_code = None  # Limpa o código de redefinição
+            user.reset_code_expiration = None  # Limpa a expiração
+            db.session.commit()
+            flash('Senha redefinida com sucesso! Faça login agora.', 'success')
+            return redirect(url_for('login'))
+        else:
+            flash('Erro ao redefinir senha.', 'danger')
+
+    return render_template('nova_senha.html', email=email)
 
 # --- Rota de Logout ---
 @app.route('/logout')
@@ -191,7 +257,7 @@ def planos():
 
 @app.route('/admin')
 @login_required
-def admin_panel():
+def admin_painel():
     # SEGURANÇA: Se não for admin, expulsa!
     if not current_user.is_admin:
         flash('Acesso negado! Área restrita para administradores.', 'danger')

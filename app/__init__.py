@@ -1,19 +1,23 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_mail import Mail
 import os
 from urllib.parse import urlsplit, parse_qsl, urlencode
 from dotenv import load_dotenv
 
 
+
 # Carrega as variáveis do arquivo .env
 load_dotenv()
+mail = Mail()
 
 # Cria a instância da aplicação (o objeto que representa o site)
 app = Flask(__name__)
 
 # --- SEGURANÇA ---
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
+
 
 # --- BANCO DE DADOS ---
 database_url = os.environ.get('DATABASE_URL') or os.environ.get('POSTGRES_URL')
@@ -41,13 +45,14 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_pre_ping': True}
 # Inicializa as extensões
 db = SQLAlchemy(app)
 login = LoginManager(app)
+mail.init_app(app)
 login.login_view = 'login' # Se alguém tentar acessar página restrita, vem pra cá
 
 # Importa os modelos antes de criar as tabelas para que o SQLAlchemy conheça todas as classes
 from app import models
 
-# with app.app_context():
-#    db.create_all()
+with app.app_context():
+   db.create_all()
 
 # Importa as rotas (atenção: deve ser importado DEPOIS de criar o app para evitar erro circular)
 from app import routes

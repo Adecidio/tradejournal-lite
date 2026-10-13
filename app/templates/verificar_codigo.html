@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+    <div class="card shadow-sm p-4" style="width: 100%; max-width: 400px;">
+        <h3 class="text-center mb-3">Verificar Código</h3>
+        <p class="text-muted text-center small mb-4">Digite o código de 6 dígitos enviado para <strong>{{ email }}</strong>.</p>
+        
+        <form method="POST">
+            <input type="hidden" name="email" value="{{ email }}">
+            <div class="mb-3">
+                <label for="code" class="form-label">Código de Verificação</label>
+                <input type="text" class="form-control text-center fs-4 tracking-widest" id="code" name="code" maxlength="6" required placeholder="000000">
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Validar Código</button>
+        </form>
+        
+        <div class="text-center mt-3">
+            <a href="{{ url_for('esqueci_senha') }}" class="text-decoration-none small">Não recebeu o código? Tentar novamente</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
