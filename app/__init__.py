@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
 from flask_login import LoginManager
 from flask_mail import Mail
 import os
@@ -52,7 +53,16 @@ login.login_view = 'login' # Se alguém tentar acessar página restrita, vem pra
 from app import models
 
 with app.app_context():
-   db.create_all()
+    db.create_all()
+    
+    # Garante que as colunas de recuperação existam mesmo se a tabela for antiga
+    try:
+        with db.engine.connect() as conn:
+            conn.execute(text('ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code VARCHAR(6);'))
+            conn.execute(text('ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code_expiration TIMESTAMP WITH TIME ZONE;'))
+            conn.commit()
+    except Exception as e:
+        print("Aviso na atualização das colunas:", e)
 
 # Importa as rotas (atenção: deve ser importado DEPOIS de criar o app para evitar erro circular)
 from app import routes
