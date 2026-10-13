@@ -1,11 +1,11 @@
 import os
 import random
+import resend
 from datetime import datetime, timedelta, timezone
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import current_user, login_user, logout_user, login_required
-from flask_mail import Message
 from werkzeug.security import generate_password_hash, check_password_hash
-from app import app, db, login, mail
+from app import app, db, login
 from app.models import User, Trade
 from app.services import salvar_trades_do_excel, gerar_dados_dashboard
 
@@ -93,6 +93,7 @@ def login():
 
     return render_template('login.html')
 
+# --- Rota de recuperação de senha ---
 @app.route('/esqueci-senha', methods=['GET', 'POST'])
 def esqueci_senha():
     if request.method == 'POST':
@@ -100,19 +101,35 @@ def esqueci_senha():
         user = User.query.filter_by(email=email).first()
         
         if user:
-            # Gera um código aleatório de 6 dígitos
             code = f"{random.randint(0, 999999):06d}"
             user.reset_code = code
             user.reset_code_expiration = datetime.now(timezone.utc) + timedelta(minutes=15)
             db.session.commit()
             
-            msg = Message('Código de Recuperação de Senha - TradeJournal',
-              recipients=[user.email])
-            msg.body = f'Olá {user.username},\n\nSeu código para redefinir a senha é: {code}\nEste código expira em 15 minutos.'
-            mail.send(msg)
-            
-            flash('Código de verificação gerado! (Verifique o terminal do VS Code para testes locais).', 'success')
-            return redirect(url_for('verificar_codigo', email=user.email))
+            try:
+                # Envio via API do Resend (Porta 443 HTTPS - Sem bloqueios)
+                params = {
+                    "from": "onboarding@resend.dev", 
+                    "to": [user.email],
+                    "subject": "Código de Recuperação de Senha - TradeJournal",
+                    "html": f"""
+                        <div style="font-family: Arial, sans-serif; padding: 20px;">
+                            <h2>Recuperação de Senha</h2>
+                            <p>Olá <b>{user.username}</b>,</p>
+                            <p>Seu código para redefinir a senha é:</p>
+                            <h1 style="color: #0d6efd; letter-spacing: 5px;">{code}</h1>
+                            <p>Este código expira em 15 minutos.</p>
+                        </div>
+                    """
+                }
+                
+                resend.Emails.send(params)
+                flash('Código de verificação enviado para o seu e-mail!', 'success')
+                return redirect(url_for('verificar_codigo', email=user.email))
+                
+            except Exception as e:
+                print(f"Erro ao enviar e-mail via API: {e}")
+                flash('Erro ao enviar o e-mail de recuperação. Tente novamente mais tarde.', 'danger')
         else:
             flash('E-mail não encontrado no sistema.', 'danger')
             
